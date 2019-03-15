@@ -94,6 +94,39 @@ Finally, Azure Key Vault is used to securely store secrets, such as account keys
      - Have a cluster running Databricks Runtime 5.1 and above.
      - Have permissions within your Azure subscription to create an App Registration and service principal within Azure Active Directory.
 
+## Exercise 0:
+
+Duration: 5 minutes.
+
+If you are using pre-configured environment for Before Hands on Lab part, please execute the below task otherwise you can skip this.
+We know there is no API from Databricks to configure secret with Key Vault so this can not be automated.
+### Task 1: Configure Azure Databricks Key Vault-backed secrets
+
+In this task, you will connect to your Azure Databricks workspace and configure Azure Databricks secrets to use your Azure Key Vault account as a backing store.
+
+1. Return to the [Azure portal](https://portal.azure.com), navigate to the Azure Databricks workspace you provisioned above, and select **Launch Workspace** from the overview blade, signing into the workspace with your Azure credentials, if required.
+
+   ![The Launch Workspace button is displayed on the Databricks Workspace Overview blade.](media/databricks-launch-workspace.png 'Launch Workspace')
+
+2. In your browser's URL bar, append **#secrets/createScope** to your Azure Databricks base URL (for example, <https://eastus.azuredatabricks.net#secrets/createScope>).
+
+3. Enter `key-vault-secrets` for the name of the secret scope.
+
+4. Select **Creator** within the Manage Principal drop-down to specify only the creator (which is you) of the secret scope has the MANAGE permission.
+
+   > MANAGE permission allows users to read and write to this secret scope, and, in the case of accounts on the Azure Databricks Premium Plan, to change permissions for the scope.
+
+   > Your account must have the Azure Databricks Premium Plan for you to be able to select Creator. This is the recommended approach: grant MANAGE permission to the Creator when you create the secret scope, and then assign more granular access permissions after you have tested the scope.
+
+5. Enter the **DNS Name** (for example, <https://woodgrove-vault.vault.azure.net/>) and **Resource ID** you copied earlier during the Key Vault creation step, for example: `/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourcegroups/hands-on-lab/providers/Microsoft.KeyVault/vaults/woodgrove-vault`.
+
+   ![Create Secret Scope form](media/create-secret-scope.png 'Create Secret Scope')
+
+6. Select **Create**.
+
+After a moment, you will see a dialog verifying that the secret scope has been created.
+
+
 ## Exercise 1: Collecting streaming transaction data
 
 Duration: 30 minutes
