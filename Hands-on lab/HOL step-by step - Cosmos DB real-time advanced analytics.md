@@ -184,7 +184,7 @@ In this task, you will create an Azure Cosmos DB account, database, and containe
 If you are using pre-configured environment for Before Hands on Lab part, please execute the below task otherwise you can skip this.
 We know there is no API from Databricks to configure secret with Key Vault so this can not be automated.
 
-### Task 1: Configure Azure Databricks Key Vault-backed secrets
+### Task 2: Configure Azure Databricks Key Vault-backed secrets
 
 In this task, you will connect to your Azure Databricks workspace and configure Azure Databricks secrets to use your Azure Key Vault account as a backing store.
 
