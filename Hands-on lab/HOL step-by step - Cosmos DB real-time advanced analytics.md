@@ -96,10 +96,94 @@ Finally, Azure Key Vault is used to securely store secrets, such as account keys
 
 ## Exercise 0:
 
-Duration: 5 minutes.
+Duration: 05 minutes.
+
+If you are using pre-configured environment for Before Hands on Lab part, please execute the below task otherwise you can skip this.
+If you've already created cosmosdb account then you'll need to add the collections manually. Please follow the steps from step 4 to step 15.
+
+### Task 1: Provision Cosmos DB
+
+In this task, you will create an Azure Cosmos DB account, database, and container for ingesting streaming payment data and for serving batch processed data.
+
+1. In the [Azure portal](https://portal.azure.com), select **+ Create a resource**, enter "cosmos db" into the Search the Marketplace box, select **Azure Cosmos DB** from the results, and then select **Create**.
+
+   ![Create a resource is highlighted in the left-hand navigation menu of the Azure portal, cosmos db is entered into the Search the Marketplace box, and Azure Cosmos DB is highlighted in the results.](media/create-resource-cosmos-db.png 'Create an Azure Cosmos DB account')
+
+2. On the Create Cosmos DB blade's basics tab, enter the following:
+
+   - **Subscription**: Select the subscription you are using for this hands-on lab.
+   - **Resource Group**: Choose the hands-on-lab-SUFFIX resource group.
+   - **Account Name**: Enter a globally unique name (indicated by a green check mark).
+   - **API**: Select Core (SQL).
+   - **Location**: Select the region you are using for resources in this hands-on lab.
+   - **Geo-Redundancy**: Enable.
+   - **Multi-region Writes**: Enable.
+
+   ![The Create Cosmos DB blade's basics tab is displayed, with the previously mentioned settings entered into the appropriate fields.](media/create-cosmos-db-blade.png 'Create Cosmos DB')
+
+3. On the Review blade, select **Create**.
+
+4. Navigate to the newly provisioned Azure Cosmos DB account in the Azure portal, then select **Data Explorer** on the left-hand menu.
+
+   ![Data Explorer is selected within the left-hand menu](media/cosmos-db-data-explorer-link.png 'Select Data Explorer')
+
+5. Select **New Collection** in the top toolbar.
+
+   ![The New Collection button is highlighted on the top toolbar](media/new-collection-button.png 'New Collection')
+
+6. In the **Add Collection** blade, configure the following:
+
+   - **Database id**: Select **Create new**, then enter "Woodgrove" for the id.
+   - **Provision database throughput**: Unchecked.
+   - **Collection id**: Enter "transactions".
+   - **Partition key**: Enter "/ipCountryCode".
+   - **Throughput**: Enter 15000.
+   
+   >**Note**: The /ipCountryCode partition was selected because the data will most likely include this value, and it allows us to partition by location from which the transaction originated. This field also contains a wide range of values, which is preferable for partitions.
+
+   ![The Add Collection blade is displayed, with the previously mentioned settings entered into the appropriate fields.](media/cosmos-db-add-collection-blade.png 'Add Collection blade')
+
+7. Select **Firewall and virtual networks** from the left-hand menu, then select Allow access from **All networks**. Select **Save**. This will allow the payment generator application to send data to your Cosmos DB collection.
+
+   ![The Firewall and virtual networks blade is displayed with the All networks radio button highlighted and selected.](media/cosmos-db-firewall.png 'Firewall and virtual networks blade')
+
+8. Select **Keys** from the left-hand menu.
+
+   ![Keys is selected within the left-hand menu](media/cosmos-db-keys-link.png 'Select Keys')
+
+9. Copy both the **URI** and **Primary Key** values and save to Notepad or similar text editor for later use in the TransactionGenerator console application. You will also insert these values into Key Vault in the next steps.
+
+   ![The Cosmos DB Read-write Keys blade is displayed with highlights around the copy buttons for both URI and Primary Key.](media/cosmos-db-keys.png 'Cosmos DB Read-write Keys')
+
+10. Open a new browser tab or window and navigate to your Azure Key Vault account in the Azure portal, then select **Secrets** under Settings on the left-hand menu. On the Secrets blade, select **+ Generate/Import** on the top toolbar.
+
+    ![Secrets is highlighted on the left-hand menu, and Generate/Import is highlighted on the top toolbar of the Secrets blade.](media/key-vault-secrets.png 'Key Vault secrets blade')
+
+11. On the Create a secret blade, enter the following:
+
+    - **Upload options**: Select Manual.
+    - **Name**: Enter "Cosmos-DB-URI".
+    - **Value**: Paste the Azure Cosmos DB URI value you copied in an earlier step.
+
+    ![The Create a secret blade is displayed, with the previously mentioned values entered into the appropriate fields.](media/key-vault-create-uri-secret.png 'Create a secret')
+
+12. Select **Create**.
+
+13. Select **+ Generate/Import** again on the top toolbar to create another secret.
+
+14. On the Create a secret blade, enter the following:
+
+    - **Upload options**: Select Manual.
+    - **Name**: Enter "Cosmos-DB-Key".
+    - **Value**: Paste the Azure Cosmos DB Primary Key value you copied in an earlier step.
+
+    ![The Create a secret blade is displayed, with the previously mentioned values entered into the appropriate fields.](media/key-vault-create-key-secret.png 'Create a secret')
+
+15. Select **Create**.
 
 If you are using pre-configured environment for Before Hands on Lab part, please execute the below task otherwise you can skip this.
 We know there is no API from Databricks to configure secret with Key Vault so this can not be automated.
+
 ### Task 1: Configure Azure Databricks Key Vault-backed secrets
 
 In this task, you will connect to your Azure Databricks workspace and configure Azure Databricks secrets to use your Azure Key Vault account as a backing store.
@@ -126,8 +210,7 @@ In this task, you will connect to your Azure Databricks workspace and configure 
 
 After a moment, you will see a dialog verifying that the secret scope has been created.
 
-
-## Exercise 1: Collecting streaming transaction data
+## Exercise 2: Collecting streaming transaction data
 
 Duration: 30 minutes
 
