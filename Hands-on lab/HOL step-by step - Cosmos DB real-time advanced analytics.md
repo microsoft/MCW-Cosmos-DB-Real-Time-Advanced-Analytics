@@ -179,6 +179,8 @@ In this task, you will configure the payment transaction data generator project 
 
    ![Screenshot of the solution folder with the TransactionGenerator.sln file selected.](media/solution-folder.png 'File Explorer')
 
+   >**Note**: If you are asked to upgrade the solution, which may occur if you are using Visual Studio 2019, select **OK**.
+
 3. Double-click `appsettings.json` in the Solution Explorer to open it. This file contains the settings used by the console app to connect to your Azure services and to configure application behavior settings. The console app is programmed to either use values stored in this file, or within the machine's environment variables. This makes you capable of distributing the executable or containerizing it and passing in environment variables via the command line.
 
    ![appsettings.json is highlighted in the Visual Studio Solution Explorer.](media/solution-explorer.png 'Solution Explorer')
@@ -329,7 +331,7 @@ Next you will pass in the Azure Cosmos DB URI and Key values to the data generat
 
     > The obvious and recommended method for sending a lot of data is to do so in batches. This method can multiply the amount of data sent with each request by hundreds or thousands. However, the point of our exercise is not to maximize throughput and send as much data as possible, but to compare the relative performance between Event Hubs and Cosmos DB.
 
-15. As an experiment, scale the number of requested RU/s for your Cosmos DB container down to 700. After doing so, you should see increasingly slower transfer rates to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 15,000.
+15. Note that if you scale the number of requested RU/s for your Cosmos DB container down to 700, you should see increasingly slower transfer rates to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 4,000.
 
 ### Task 4: Choosing between Cosmos DB and Event Hubs for ingestion
 
@@ -382,6 +384,8 @@ In this exercise, you will use the data generator to send data to both Event Hub
    - **Enable Auto-Inflate**: Unchecked
 
    ![The Create Namespace blade is displayed, with the previously mentioned settings entered into the appropriate fields.](media/create-event-hubs-blade-uk.png 'Create Namespace')
+
+   >**Note**: You may only see some of these settings if you navigate to the **Features** tab in the **Create Namespace** page.
 
 10. Select **Create**.
 
@@ -561,7 +565,7 @@ Woodgrove Bank provided historical transaction data. We want to explore this dat
 
     ![Data hub.](media/data-hub.png "Data hub")
 
-2. Select the **Linked** tab **(1)**, then expand the ADLS Gen2 account and select the **`defaultfs (Primary)`** container **(2)**. Navigate to the **`synapse`** folder **(3)**, then select **Upload (4)**.
+2. Select the **Linked** tab **(1)**, then expand the ADLS Gen2 account and select the **`defaultfs (Primary)`** container **(2)**. Navigate to the **`synapse`** folder **(3)** (you may need to make one), then select **Upload (4)**.
 
     ![The ADLS Gen2 account is selected and the Upload button is highlighted.](media/upload-button.png "Upload")
 
