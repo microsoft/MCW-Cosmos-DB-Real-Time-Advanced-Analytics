@@ -507,7 +507,7 @@ In this exercise, you will use the data generator to send data to both Event Hub
 
     ![The Messages metric is selected for the UK South Event Hubs namespace.](media/uk-south-metrics.png 'Event Hubs Overview blade')
 
-37. View the data that was saved to Azure Cosmos DB. Navigate to the Azure Cosmos DB account for this lab in the Azure portal. Select **Data Explorer** on the left-hand menu. Expand the **Woodgrove** database and **transactions** collection, then select **Documents**. Select one of the documents from the list to view it. If you selected a more recently added document, notice that it contains a `ttl` value of 5,184,000 seconds, or 60 days. Also, there is a `collectionType` value of "Transaction". This allows consumers to query documents stored within the collection by the type. This is needed because a collection can contain any number of document types within, since it does not enforce any type of schema.
+37. View the data that was saved to Azure Cosmos DB. Navigate to the Azure Cosmos DB account for this lab in the Azure portal. Select **Data Explorer** on the left-hand menu. Expand the **Woodgrove** database and **transactions** collection, then select **Items**. Select one of the documents from the list to view it. If you selected a more recently added document, notice that it contains a `ttl` value of 5,184,000 seconds, or 60 days. Also, there is a `collectionType` value of "Transaction". This allows consumers to query documents stored within the collection by the type. This is needed because a collection can contain any number of document types within, since it does not enforce any type of schema.
 
     ![Screenshot shows a document displayed within the Cosmos DB Data Explorer.](media/cosmos-db-document.png 'Cosmos DB Data Explorer')
 
@@ -607,6 +607,10 @@ In this notebook, you will explore this raw transaction data provided by Woodgro
 
     ![The add code button is highlighted.](media/add-code.png "Add code")
 
+    >**Note**: If you cannot see this, then you may need to navigate back to the top bar to select **+ Cell > Add code cell**.
+    >
+    >   ![Adding a code cell to interact with Spark.](./media/add-code-cell.png "Adding code cell")
+
 2. Paste and execute the following in the new cell to review columns with null values (Tip: you can execute a cell by entering **Ctrl+Enter**):
 
     ```python
@@ -621,7 +625,10 @@ In this notebook, you will explore this raw transaction data provided by Woodgro
 
     ```python
     transactions.select("transactionScenario").distinct().show()
+    transactions.select("transactionType").distinct().show()
     ```
+
+    ![Observing that transactionScenario and transactionType columns have only one distinct value.](./media/columns-with-one-distinct-value.png "Identifying fields that are not useful for the model")
 
     As you can see from the results above, both the `transactionScenario` and `transactionType` fields each contain only a single value, which provides little value in making a determination about whether the transaction might be fraudulent.
 
@@ -727,7 +734,7 @@ Another aspect of the data to review is the data types of each column. To view t
     |-- purchaseProductType: string (nullable = true)
     ```
 
-    When building your model, you will want to make sure each field in reflective of the type of data stored in the column, and considering casting some columns to a more appropriate type. For example, the `transactionIPaddress` field is currently represented as a `double`, but since it contains the last two octets of the user's IP address, it may be better represented as a `string` value.
+    When building your model, you will want to make sure each field is reflective of the type of data stored in the column, and considering casting some columns to a more appropriate type. For example, the `transactionIPaddress` field is currently represented as a `double`, but since it contains the last two octets of the user's IP address, it may be better represented as a `string` value.
 
 ## Exercise 3: Creating and evaluating fraud models
 
@@ -745,7 +752,7 @@ In this task, you create a new Azure Machine Learning datastore that points to t
 
     ![The Machine Learning resource is selected.](media/azure-ml-select.png "Machine Learning")
 
-3. Select **Launch now** to open the Azure Machine Learning studio.
+3. Select **Launch now**  to open the Azure Machine Learning studio.
 
     ![The option to launch Azure Machine Learning Studio is selected.](media/azure-ml-launch.png "Launch now")
 
@@ -780,6 +787,10 @@ In this task, you will use a notebook to explore the transaction and account dat
 1. Navigate to the **Notebooks** section and then select the **Upload files** option.
 
     ![The Upload files button is highlighted.](media/azure-ml-upload-files.png "Upload files")
+
+    > **Note**: Alternatively, on the **Notebooks** page, select **+ Create** and **Upload files**.
+    >
+    > ![Upload notebook to AML studio.](./media/upload-notebook.png "Upload notebook")
 
 2. Browse to the location you extracted the MCW repo .zip file to (C:\\CosmosMCW\\) and navigate to the `Hands-on lab\lab-files` directory. Select the two **`.ipynb`** notebook files in the directory, then select **Open**.
 
@@ -829,6 +840,21 @@ In this task, you will use a notebook to explore the transaction and account dat
     After selecting the link, enter the code and select **Next**. You may be prompted to select an account; if so, choose your Azure account and continue.
 
     ![A prompt to enter the authentication code.](media/azure-ml-notebook-authentication-2.png "Enter code")
+
+11. Users with access to subscriptions in multiple AAD tenants may need to specify the tenant that the subscription they are using for the lab is located in. If you are in this situation, comment out the `ws = Workspace.from_config()` call and place the following above it:
+
+    ```python
+    from azureml.core.authentication import InteractiveLoginAuthentication
+
+    interactive_auth = InteractiveLoginAuthentication(tenant_id="")
+    ws = Workspace(subscription_id="", 
+                   resource_group="", 
+                   workspace_name="")
+    ws.write_config()
+
+    # ws = Workspace.from_config()
+    ```
+If you are unsure of your tenant ID, consult [this](https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-how-to-find-tenant) document. You won't need to perform these steps for the other notebook because the updated configuration will be stored on the compute instance.
 
 ### Task 3: View the deployed model endpoint
 
