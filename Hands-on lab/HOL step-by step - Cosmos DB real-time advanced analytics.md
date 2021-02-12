@@ -1154,6 +1154,23 @@ In this task, you will execute Synapse Notebooks to perform both near real-time 
 
     > In the cell that requires the Azure Machine Learning connection information, enter the same values you copied from the **Prepare batch scoring model** Azure ML notebook.
 
+    >**Note**: If you are using a multi-tenant Azure environment, and interactive authentication fails, you may need to replace the `getOrCreateWorkspace()` function with the following (replace `tenant_id`):
+    >
+    ```python
+    from azureml.core.authentication import InteractiveLoginAuthentication
+
+    def getOrCreateWorkspace(subscription_id, resource_group, workspace_name, workspace_region):
+        # By using the exist_ok param, if the worskpace already exists we get a reference to the existing workspace instead of an error
+        ws = Workspace.create(
+            auth = InteractiveLoginAuthentication(tenant_id=''),
+            name = workspace_name,
+            subscription_id = subscription_id,
+            resource_group = resource_group, 
+            location = workspace_region,
+            exist_ok = True)
+        return ws
+    ```
+
 6. Select the **Batch-scoring-analytical-store** notebook.
 
     ![The notebook is selected.](media/notebook-batch-scoring.png "Batch-scoring-analytical-store")
