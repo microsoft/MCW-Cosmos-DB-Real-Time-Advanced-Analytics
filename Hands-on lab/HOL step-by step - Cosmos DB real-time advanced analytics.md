@@ -179,6 +179,8 @@ In this task, you will configure the payment transaction data generator project 
 
    ![Screenshot of the solution folder with the TransactionGenerator.sln file selected.](media/solution-folder.png 'File Explorer')
 
+   >**Note**: If you are asked to upgrade the solution, which may occur if you are using Visual Studio 2019, select **OK**.
+
 3. Double-click `appsettings.json` in the Solution Explorer to open it. This file contains the settings used by the console app to connect to your Azure services and to configure application behavior settings. The console app is programmed to either use values stored in this file, or within the machine's environment variables. This makes you capable of distributing the executable or containerizing it and passing in environment variables via the command line.
 
    ![appsettings.json is highlighted in the Visual Studio Solution Explorer.](media/solution-explorer.png 'Solution Explorer')
@@ -329,7 +331,7 @@ Next you will pass in the Azure Cosmos DB URI and Key values to the data generat
 
     > The obvious and recommended method for sending a lot of data is to do so in batches. This method can multiply the amount of data sent with each request by hundreds or thousands. However, the point of our exercise is not to maximize throughput and send as much data as possible, but to compare the relative performance between Event Hubs and Cosmos DB.
 
-15. As an experiment, scale the number of requested RU/s for your Cosmos DB container down to 700. After doing so, you should see increasingly slower transfer rates to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 15,000.
+15. Note that if you scale the number of requested RU/s for your Cosmos DB container down to 700, you should see increasingly slower transfer rates to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 4,000.
 
 ### Task 4: Choosing between Cosmos DB and Event Hubs for ingestion
 
@@ -382,6 +384,8 @@ In this exercise, you will use the data generator to send data to both Event Hub
    - **Enable Auto-Inflate**: Unchecked
 
    ![The Create Namespace blade is displayed, with the previously mentioned settings entered into the appropriate fields.](media/create-event-hubs-blade-uk.png 'Create Namespace')
+
+   >**Note**: You may only see some of these settings if you navigate to the **Features** tab in the **Create Namespace** page.
 
 10. Select **Create**.
 
@@ -503,7 +507,7 @@ In this exercise, you will use the data generator to send data to both Event Hub
 
     ![The Messages metric is selected for the UK South Event Hubs namespace.](media/uk-south-metrics.png 'Event Hubs Overview blade')
 
-37. View the data that was saved to Azure Cosmos DB. Navigate to the Azure Cosmos DB account for this lab in the Azure portal. Select **Data Explorer** on the left-hand menu. Expand the **Woodgrove** database and **transactions** collection, then select **Documents**. Select one of the documents from the list to view it. If you selected a more recently added document, notice that it contains a `ttl` value of 5,184,000 seconds, or 60 days. Also, there is a `collectionType` value of "Transaction". This allows consumers to query documents stored within the collection by the type. This is needed because a collection can contain any number of document types within, since it does not enforce any type of schema.
+37. View the data that was saved to Azure Cosmos DB. Navigate to the Azure Cosmos DB account for this lab in the Azure portal. Select **Data Explorer** on the left-hand menu. Expand the **Woodgrove** database and **transactions** collection, then select **Items**. Select one of the documents from the list to view it. If you selected a more recently added document, notice that it contains a `ttl` value of 5,184,000 seconds, or 60 days. Also, there is a `collectionType` value of "Transaction". This allows consumers to query documents stored within the collection by the type. This is needed because a collection can contain any number of document types within, since it does not enforce any type of schema.
 
     ![Screenshot shows a document displayed within the Cosmos DB Data Explorer.](media/cosmos-db-document.png 'Cosmos DB Data Explorer')
 
@@ -561,7 +565,7 @@ Woodgrove Bank provided historical transaction data. We want to explore this dat
 
     ![Data hub.](media/data-hub.png "Data hub")
 
-2. Select the **Linked** tab **(1)**, then expand the ADLS Gen2 account and select the **`defaultfs (Primary)`** container **(2)**. Navigate to the **`synapse`** folder **(3)**, then select **Upload (4)**.
+2. Select the **Linked** tab **(1)**, then expand the ADLS Gen2 account and select the **`defaultfs (Primary)`** container **(2)**. Navigate to the **`synapse`** folder **(3)** (you may need to make one), then select **Upload (4)**.
 
     ![The ADLS Gen2 account is selected and the Upload button is highlighted.](media/upload-button.png "Upload")
 
@@ -603,6 +607,10 @@ In this notebook, you will explore this raw transaction data provided by Woodgro
 
     ![The add code button is highlighted.](media/add-code.png "Add code")
 
+    >**Note**: If you cannot see this, then you may need to navigate back to the top bar to select **+ Cell > Add code cell**.
+    >
+    >   ![Adding a code cell to interact with Spark.](./media/add-code-cell.png "Adding code cell")
+
 2. Paste and execute the following in the new cell to review columns with null values (Tip: you can execute a cell by entering **Ctrl+Enter**):
 
     ```python
@@ -617,7 +625,10 @@ In this notebook, you will explore this raw transaction data provided by Woodgro
 
     ```python
     transactions.select("transactionScenario").distinct().show()
+    transactions.select("transactionType").distinct().show()
     ```
+
+    ![Observing that transactionScenario and transactionType columns have only one distinct value.](./media/columns-with-one-distinct-value.png "Identifying fields that are not useful for the model")
 
     As you can see from the results above, both the `transactionScenario` and `transactionType` fields each contain only a single value, which provides little value in making a determination about whether the transaction might be fraudulent.
 
@@ -723,7 +734,7 @@ Another aspect of the data to review is the data types of each column. To view t
     |-- purchaseProductType: string (nullable = true)
     ```
 
-    When building your model, you will want to make sure each field in reflective of the type of data stored in the column, and considering casting some columns to a more appropriate type. For example, the `transactionIPaddress` field is currently represented as a `double`, but since it contains the last two octets of the user's IP address, it may be better represented as a `string` value.
+    When building your model, you will want to make sure each field is reflective of the type of data stored in the column, and considering casting some columns to a more appropriate type. For example, the `transactionIPaddress` field is currently represented as a `double`, but since it contains the last two octets of the user's IP address, it may be better represented as a `string` value.
 
 ## Exercise 3: Creating and evaluating fraud models
 
@@ -741,7 +752,7 @@ In this task, you create a new Azure Machine Learning datastore that points to t
 
     ![The Machine Learning resource is selected.](media/azure-ml-select.png "Machine Learning")
 
-3. Select **Launch now** to open the Azure Machine Learning studio.
+3. Select **Launch now**  to open the Azure Machine Learning studio.
 
     ![The option to launch Azure Machine Learning Studio is selected.](media/azure-ml-launch.png "Launch now")
 
@@ -776,6 +787,10 @@ In this task, you will use a notebook to explore the transaction and account dat
 1. Navigate to the **Notebooks** section and then select the **Upload files** option.
 
     ![The Upload files button is highlighted.](media/azure-ml-upload-files.png "Upload files")
+
+    > **Note**: Alternatively, on the **Notebooks** page, select **+ Create** and **Upload files**.
+    >
+    > ![Upload notebook to AML studio.](./media/upload-notebook.png "Upload notebook")
 
 2. Browse to the location you extracted the MCW repo .zip file to (C:\\CosmosMCW\\) and navigate to the `Hands-on lab\lab-files` directory. Select the two **`.ipynb`** notebook files in the directory, then select **Open**.
 
@@ -825,6 +840,21 @@ In this task, you will use a notebook to explore the transaction and account dat
     After selecting the link, enter the code and select **Next**. You may be prompted to select an account; if so, choose your Azure account and continue.
 
     ![A prompt to enter the authentication code.](media/azure-ml-notebook-authentication-2.png "Enter code")
+
+11. Users with access to subscriptions in multiple AAD tenants may need to specify the tenant that the subscription they are using for the lab is located in. If you are in this situation, comment out the `ws = Workspace.from_config()` call and place the following above it:
+
+    ```python
+    from azureml.core.authentication import InteractiveLoginAuthentication
+
+    interactive_auth = InteractiveLoginAuthentication(tenant_id="")
+    ws = Workspace(subscription_id="", 
+                   resource_group="", 
+                   workspace_name="")
+    ws.write_config()
+
+    # ws = Workspace.from_config()
+    ```
+If you are unsure of your tenant ID, consult [this](https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-how-to-find-tenant) document. You won't need to perform these steps for the other notebook because the updated configuration will be stored on the compute instance.
 
 ### Task 3: View the deployed model endpoint
 
@@ -1123,6 +1153,23 @@ In this task, you will execute Synapse Notebooks to perform both near real-time 
 5. In the **Real-time-scoring** notebook, follow the instructions to complete the remaining steps of this task.
 
     > In the cell that requires the Azure Machine Learning connection information, enter the same values you copied from the **Prepare batch scoring model** Azure ML notebook.
+
+    >**Note**: If you are using a multi-tenant Azure environment, and interactive authentication fails, you may need to replace the `getOrCreateWorkspace()` function with the following (replace `tenant_id`):
+    >
+    ```python
+    from azureml.core.authentication import InteractiveLoginAuthentication
+
+    def getOrCreateWorkspace(subscription_id, resource_group, workspace_name, workspace_region):
+        # By using the exist_ok param, if the worskpace already exists we get a reference to the existing workspace instead of an error
+        ws = Workspace.create(
+            auth = InteractiveLoginAuthentication(tenant_id=''),
+            name = workspace_name,
+            subscription_id = subscription_id,
+            resource_group = resource_group, 
+            location = workspace_region,
+            exist_ok = True)
+        return ws
+    ```
 
 6. Select the **Batch-scoring-analytical-store** notebook.
 
