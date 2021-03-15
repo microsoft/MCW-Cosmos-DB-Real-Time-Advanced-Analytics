@@ -470,12 +470,54 @@
                     "enabled": "[variables('sparkAutoPauseEnabled')]",
                     "delayInMinutes": "[variables('sparkAutoPauseDelayInMinutes')]"
                 },
-                "sparkVersion": "[variables('sparkVersion')]",
-                "libraryRequirements": {
-                    "filename": "[variables('packagesRequirementsFileName')]",
-                    "content": "[variables('packagesRequirementsContent')]"
-                }
+                "sparkVersion": "[variables('sparkVersion')]"
             }
+        },
+        {
+          "apiVersion": "2015-01-01",
+          "type": "Microsoft.Resources/deployments",
+          "name": "UpdateSparkPool01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Synapse/workspaces/bigDataPools', variables('workspaceName'), variables('sparkComputeName'))]"
+
+          ],
+          "properties":{
+            "mode": "Incremental",
+            "parameters": {},
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {},
+              "variables": {},
+              "resources": [
+              {
+                  "type": "Microsoft.Synapse/workspaces/bigDataPools",
+                  "apiVersion": "2019-06-01-preview",
+                  "name": "[concat(variables('workspaceName'), '/', variables('sparkComputeName'))]",
+                  "location": "[variables('location')]",
+                  "properties": {
+                    "nodeCount": "[variables('sparkNodeCount')]",
+                    "nodeSizeFamily": "[variables('sparkNodeSizeFamily')]",
+                    "nodeSize": "[variables('sparkNodeSize')]",
+                    "autoScale": {
+                      "enabled": "[variables('sparkAutoScaleEnabled')]",
+                      "minNodeCount": "[variables('sparkMinNodeCount')]",
+                      "maxNodeCount": "[variables('sparkMaxNodeCount')]"
+                    },
+                    "autoPause": {
+                      "enabled": "[variables('sparkAutoPauseEnabled')]",
+                      "delayInMinutes": "[variables('sparkAutoPauseDelayInMinutes')]"
+                    },
+                    "sparkVersion": "[variables('sparkVersion')]",
+                    "libraryRequirements": {
+                      "filename": "[variables('packagesRequirementsFileName')]",
+                      "content": "[variables('packagesRequirementsContent')]"
+                    }
+                  }
+                }
+              ]
+            }
+          }
         },
         {
             "type": "Microsoft.Insights/components",
