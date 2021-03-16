@@ -494,7 +494,7 @@
                   "type": "Microsoft.Synapse/workspaces/bigDataPools",
                   "apiVersion": "2019-06-01-preview",
                   "name": "[concat(variables('workspaceName'), '/', variables('sparkComputeName'))]",
-                  "location": "[variables('location')]",
+                  "location": "[variables('primary_region')]",
                   "properties": {
                     "nodeCount": "[variables('sparkNodeCount')]",
                     "nodeSizeFamily": "[variables('sparkNodeSizeFamily')]",
