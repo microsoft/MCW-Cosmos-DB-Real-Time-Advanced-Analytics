@@ -108,7 +108,7 @@ Finally, Azure Key Vault is used to securely store secrets, such as account keys
 
 ## Requirements
 
-1. Microsoft Azure subscription (non-Microsoft subscription, must be a pay-as-you subscription).
+1. Microsoft Azure subscription (non-Microsoft subscription, must be a pay-as-you-go subscription).
 2. Power BI pro license (optional)
 
 ## Exercise 1: Collecting streaming transaction data
@@ -259,13 +259,13 @@ In this task, you will configure Cosmos DB's time-to-live (TTL) settings to On w
 
 Next you will pass in the Azure Cosmos DB URI and Key values to the data generator so it can connect to and send events to your collection.
 
-1. Navigate to your Azure Cosmos DB account in the Azure portal, then select **Data Explorer** on the left-hand menu.
+1. Navigate to your Azure Cosmos DB account in the Azure portal, then select **Data Explorer (2)** on the **Overview (1)** page.
 
-   ![Data Explorer is selected within the left-hand menu](media/cosmos-db-data-explorer-link.png 'Select Data Explorer')
+   ![Data Explorer is highlighted on the Overview page for Cosmos DB.](media/cosmos-db-data-explorer-link.png 'Select Data Explorer')
 
-2. Expand your **Woodgrove** database and your **transactions** container, then select **Settings**.
+2. Expand your **Woodgrove (1)** database and your **transactions (2)** container, then select **Scale & Settings (3)**.
 
-3. Under Settings within the Settings blade, select the **On (no default)** option for Time to Live. This setting is required to allow documents added to the container to be configured with their own TTL values.
+3. Under **Settings (4)** within the Scale & Settings blade, select the **On (no default)** option for Time to Live. This setting is required to allow documents added to the container to be configured with their own TTL values.
 
    ![The Settings blade is shown with the On (no default) Time to Live option selected.](media/cosmos-db-ttl-settings.png 'Settings blade')
 
@@ -331,7 +331,7 @@ Next you will pass in the Azure Cosmos DB URI and Key values to the data generat
 
     > The obvious and recommended method for sending a lot of data is to do so in batches. This method can multiply the amount of data sent with each request by hundreds or thousands. However, the point of our exercise is not to maximize throughput and send as much data as possible, but to compare the relative performance between Event Hubs and Cosmos DB.
 
-15. Note that if you scale the number of requested RU/s for your Cosmos DB container down to 700, you should see increasingly slower transfer rates to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 4,000.
+15. Note that the current container is set to Autoscale based on load. If you set the scale the number of requested RU/s for your Cosmos DB container manually down to a 700, you should see slower transfer rates increasingly to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 4,000 or to AutoScale.
 
 ### Task 4: Choosing between Cosmos DB and Event Hubs for ingestion
 
@@ -675,7 +675,7 @@ Woodgrove has provided you with a list of possible `cvvVerifyResult` values and 
     There are two interesting things to note for the values in the `cvvVerifyResult` field:
 
     1. We have some rows with empty values, which, according to the values listed provided by Woodgrove, indicates a failed transaction. For our fraud detection model, we are only concerned with completed transactions, so you might consider dropping rows where the `cvvVerifyResult` is empty. The count allows us to have some insight into the impact this will have on the size of our dataset.
-    
+
     2. There are a small number of values (X or Y for instance) that are not valid values, according to the list of acceptable values. Since these rows don't contain valid transactions, some consideration should be given to how to handle them in your model.
 
 ### Task 7: Review column data types
@@ -854,6 +854,7 @@ In this task, you will use a notebook to explore the transaction and account dat
 
     # ws = Workspace.from_config()
     ```
+
 If you are unsure of your tenant ID, consult [this](https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-how-to-find-tenant) document. You won't need to perform these steps for the other notebook because the updated configuration will be stored on the compute instance.
 
 ### Task 3: View the deployed model endpoint
