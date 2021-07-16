@@ -108,7 +108,7 @@ Finally, Azure Key Vault is used to securely store secrets, such as account keys
 
 ## Requirements
 
-1. Microsoft Azure subscription (non-Microsoft subscription, must be a pay-as-you subscription).
+1. Microsoft Azure subscription (non-Microsoft subscription, must be a pay-as-you-go subscription).
 2. Power BI pro license (optional)
 
 ## Exercise 1: Collecting streaming transaction data
@@ -259,13 +259,13 @@ In this task, you will configure Cosmos DB's time-to-live (TTL) settings to On w
 
 Next you will pass in the Azure Cosmos DB URI and Key values to the data generator so it can connect to and send events to your collection.
 
-1. Navigate to your Azure Cosmos DB account in the Azure portal, then select **Data Explorer** on the left-hand menu.
+1. Navigate to your Azure Cosmos DB account in the Azure portal, then select **Data Explorer (2)** on the **Overview (1)** page.
 
-   ![Data Explorer is selected within the left-hand menu](media/cosmos-db-data-explorer-link.png 'Select Data Explorer')
+   ![Data Explorer is highlighted on the Overview page for Cosmos DB.](media/cosmos-db-data-explorer-link.png 'Select Data Explorer')
 
-2. Expand your **Woodgrove** database and your **transactions** container, then select **Settings**.
+2. Expand your **Woodgrove (1)** database and your **transactions (2)** container, then select **Scale & Settings (3)**.
 
-3. Under Settings within the Settings blade, select the **On (no default)** option for Time to Live. This setting is required to allow documents added to the container to be configured with their own TTL values.
+3. Under **Settings (4)** within the Scale & Settings blade, select the **On (no default)** option for Time to Live. This setting is required to allow documents added to the container to be configured with their own TTL values.
 
    ![The Settings blade is shown with the On (no default) Time to Live option selected.](media/cosmos-db-ttl-settings.png 'Settings blade')
 
@@ -331,7 +331,7 @@ Next you will pass in the Azure Cosmos DB URI and Key values to the data generat
 
     > The obvious and recommended method for sending a lot of data is to do so in batches. This method can multiply the amount of data sent with each request by hundreds or thousands. However, the point of our exercise is not to maximize throughput and send as much data as possible, but to compare the relative performance between Event Hubs and Cosmos DB.
 
-15. Note that if you scale the number of requested RU/s for your Cosmos DB container down to 700, you should see increasingly slower transfer rates to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 4,000.
+15. Note that the current container is set to Autoscale based on load. If you set the scale the number of requested RU/s for your Cosmos DB container manually down to a 700, you should see slower transfer rates increasingly to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 4,000 or to AutoScale.
 
 ### Task 4: Choosing between Cosmos DB and Event Hubs for ingestion
 
@@ -675,7 +675,7 @@ Woodgrove has provided you with a list of possible `cvvVerifyResult` values and 
     There are two interesting things to note for the values in the `cvvVerifyResult` field:
 
     1. We have some rows with empty values, which, according to the values listed provided by Woodgrove, indicates a failed transaction. For our fraud detection model, we are only concerned with completed transactions, so you might consider dropping rows where the `cvvVerifyResult` is empty. The count allows us to have some insight into the impact this will have on the size of our dataset.
-    
+
     2. There are a small number of values (X or Y for instance) that are not valid values, according to the list of acceptable values. Since these rows don't contain valid transactions, some consideration should be given to how to handle them in your model.
 
 ### Task 7: Review column data types
@@ -784,9 +784,9 @@ In this task, you create a new Azure Machine Learning datastore that points to t
 
 In this task, you will use a notebook to explore the transaction and account data. You will also do some data cleanup and create a feature engineering pipeline that applies these transformations each time data is passed to the model for scoring. Finally, you will train and deploy a machine learning model that detects fraudulent transactions.
 
-1. Navigate to the **Notebooks** section and then select the **Upload files** option.
+1. Navigate to the **Notebooks** section and then select the **Upload files (3)** option.
 
-    ![The Upload files button is highlighted.](media/azure-ml-upload-files.png "Upload files")
+    ![The Upload files menu command is highlighted.](media/azure-ml-upload-files.png "Upload files")
 
     > **Note**: Alternatively, on the **Notebooks** page, select **+ Create** and **Upload files**.
     >
@@ -812,28 +812,21 @@ In this task, you will use a notebook to explore the transaction and account dat
 
     | Field                          | Value                                              |
     | ------------------------------ | ------------------------------------------         |
+    | Compute name                   | _`woodgrove`_ or unique value |
     | Virtual machine type           | _select `CPU`_           |
     | Virtual machine size           | _select `Select from recommended options`, then select `Standard_DS3_v2`_                         |
 
     ![The field entries are completed as described.](media/new-compute-vm.png "New compute instance - VM")
 
-7. In the **Create compute instance** section, complete the following and then select **Create**.
-
-   | Field                          | Value                                              |
-   | ------------------------------ | ------------------------------------------         |
-   | Compute name                   | _`woodgrove`_ or unique value |
-
-   ![In the New compute instance output, form field entries are filled in.](media/new-compute.png "New compute instance")
-
-8. After the **Compute** has been created **(1)**, select **Editors**, then **{} Edit in Jupyter (2)** to open the notebook in the Jupyter editor, which provides an enhanced notebook experience.
+7. After the **Compute** has been created **(1)**, select **Editors (2)**, then **Edit in Jupyter (3)** to open the notebook in the Jupyter editor, which provides an enhanced notebook experience.
 
     ![The edit in Jupyter menu item is highlighted.](media/edit-in-jupyter.png "Edit in Jupyter")
 
-9. **Run** each cell in the notebook. You can select a cell and enter **Shift+Enter** to execute the cell and advance to the next one. Be sure to read and understand each cell and descriptions throughout the notebook.
+8. **Run** each cell in the notebook. You can select a cell and enter **Shift+Enter** to execute the cell and advance to the next one. Be sure to read and understand each cell and descriptions throughout the notebook.
 
     > If you receive errors after executing the first two cells, rerun them again. The first cell performs `!pip install` commands, which take a few moments to apply to all the worker nodes.
 
-10. You may receive a prompt to sign in after executing the first cell. If you do, copy the code in your notebook and then select the link to authenticate.
+9. You may receive a prompt to sign in after executing the first cell. If you do, copy the code in your notebook and then select the link to authenticate.
 
     ![A prompt to perform interactive authentication.](media/azure-ml-notebook-authentication.png "Performing interactive authentication")
 
@@ -841,7 +834,7 @@ In this task, you will use a notebook to explore the transaction and account dat
 
     ![A prompt to enter the authentication code.](media/azure-ml-notebook-authentication-2.png "Enter code")
 
-11. Users with access to subscriptions in multiple AAD tenants may need to specify the tenant that the subscription they are using for the lab is located in. If you are in this situation, comment out the `ws = Workspace.from_config()` call and place the following above it:
+10. Users with access to subscriptions in multiple AAD tenants may need to specify the tenant that the subscription they are using for the lab is located in. If you are in this situation, comment out the `ws = Workspace.from_config()` call and place the following above it:
 
     ```python
     from azureml.core.authentication import InteractiveLoginAuthentication
@@ -854,6 +847,7 @@ In this task, you will use a notebook to explore the transaction and account dat
 
     # ws = Workspace.from_config()
     ```
+
 If you are unsure of your tenant ID, consult [this](https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-how-to-find-tenant) document. You won't need to perform these steps for the other notebook because the updated configuration will be stored on the compute instance.
 
 ### Task 3: View the deployed model endpoint
@@ -866,7 +860,7 @@ In the notebook, you deployed the model to Azure Container Instances (ACI) and t
 
     ![The fraud-score model is selected.](media/azure-ml-models.png "fraud-score")
 
-3. On the model's page, select the **Endpoints** tab, then select the **scoringservice** endpoint, which is the name we provided when deploying the model in the notebook. Notice that the **Compute type** is set to `ACI`.
+3. On the model's page, select the **Endpoints (1)** tab, then select the **scoringservice (2)** endpoint, which is the name we provided when deploying the model in the notebook. Notice that the **Compute type** is set to `Container instance`.
 
     ![The scoringservice endpoint is highlighted.](media/model-endpoints.png "Endpoints")
 
@@ -886,7 +880,11 @@ In the notebook, you deployed the model to Azure Container Instances (ACI) and t
 
     You should receive back a JSON array with the values `[true, true, false, true, false]`.
 
-    > **Note**: If you do not have the curl application installed, you may alternatively wish to install [Postman](https://www.postman.com/), a free tool for making web requests.
+    > **Note**: If you do not have the curl application installed, you may alternatively wish to install [Postman](https://www.postman.com/), a free tool for making web requests. Below you can find the RAW POST request body.
+    >
+    >```javascript
+    >{"data": [{"accountID":"A985156985579195","browserLanguage":"en-AU","cardType":"VISA","cvvVerifyResult":"M","digitalItemCount":1,"ipCountryCode":"au","ipPostcode":"3000","ipState":"victoria","isProxyIP":false,"localHour":19.0,"paymentBillingCountryCode":"AU","paymentBillingPostalCode":"3122","paymentBillingState":"Victoria","paymentInstrumentType":"CREDITCARD","physicalItemCount":0,"transactionAmount":99.0,"transactionAmountUSD":103.48965,"transactionCurrencyCode":"AUD","transactionDate":20130409,"transactionID":"5EAC1EBD-1428-4593-898E-F4B56BC3FA06","transactionIPaddress":121.219,"transactionTime":95040},{"accountID":"A985156966855837","browserLanguage":"en-AU","cardType":"VISA","cvvVerifyResult":"M","digitalItemCount":0,"ipCountryCode":"us","ipPostcode":"14534","ipState":"new york","isProxyIP":false,"localHour":null,"paymentBillingCountryCode":"AU","paymentBillingPostalCode":"2209","paymentBillingState":"New South Wales","paymentInstrumentType":"CREDITCARD","physicalItemCount":1,"transactionAmount":679.0,"transactionAmountUSD":709.79265,"transactionCurrencyCode":"AUD","transactionDate":20130409,"transactionID":"48C88D1C-3705-472B-A4A3-5FCE45A5429B","transactionIPaddress":216.15,"transactionTime":94256},{"accountID":"A844428012992486","browserLanguage":"nn-NO","cardType":"MC","cvvVerifyResult":"M","digitalItemCount":1,"ipCountryCode":"no","ipPostcode":"1006","ipState":"oslo","isProxyIP":false,"localHour":10.0,"paymentBillingCountryCode":"NO","paymentBillingPostalCode":"7033","paymentBillingState":null,"paymentInstrumentType":"CREDITCARD","physicalItemCount":0,"transactionAmount":1099.0,"transactionAmountUSD":199.75424,"transactionCurrencyCode":"NOK","transactionDate":20130409,"transactionID":"13B2A110-EA04-42CD-88CC-A85814A5C961","transactionIPaddress":94.246,"transactionTime":95257},{"accountID":"A1055521358474530","browserLanguage":"en-US","cardType":"AMEX","cvvVerifyResult":"M","digitalItemCount":0,"ipCountryCode":"ae","ipPostcode":"0","ipState":"dubayy","isProxyIP":false,"localHour":14.0,"paymentBillingCountryCode":"US","paymentBillingPostalCode":"33071","paymentBillingState":"FL","paymentInstrumentType":"CREDITCARD","physicalItemCount":4,"transactionAmount":2405.33,"transactionAmountUSD":2405.33,"transactionCurrencyCode":"USD","transactionDate":20130409,"transactionID":"C34F7C20-6203-42F5-A41B-AF26177345BE","transactionIPaddress":92.97,"transactionTime":102958},{"accountID":"A844428033864668","browserLanguage":"it-IT","cardType":"VISA","cvvVerifyResult":"U","digitalItemCount":1,"ipCountryCode":"it","ipPostcode":"39100","ipState":"bolzano","isProxyIP":false,"localHour":11.0,"paymentBillingCountryCode":"IT","paymentBillingPostalCode":"50133","paymentBillingState":"Firenze","paymentInstrumentType":"CREDITCARD","physicalItemCount":0,"transactionAmount":269.0,"transactionAmountUSD":362.5582,"transactionCurrencyCode":"EUR","transactionDate":20130409,"transactionID":"C78542E6-0951-4B63-B420-BEF750B98BCD","transactionIPaddress":95.229,"transactionTime":103514}]}
+    >```
 
 ### Task 5: Prepare batch scoring model
 
@@ -896,7 +894,7 @@ In this task, you will use a notebook to prepare a model used to detect suspicio
 
     ![The batch scoring notebook is highlighted.](media/select-batch-notebook.png "Notebooks")
 
-2. Ensure the **Compute** is running **(1)**, select **Jupyter**, then **{} Edit in Jupyter (2)** to open the notebook in the Jupyter editor, which provides an enhanced notebook experience.
+2. Open the context menu **(1)** and select **Editors (2) > Edit in Jupyter (3)** to open the notebook in the Jupyter editor, which provides an enhanced notebook experience.
 
     ![The edit in Jupyter menu item is highlighted.](media/edit-in-jupyter-2.png "Edit in Jupyter")
 
@@ -986,43 +984,35 @@ To do this you will create a Synapse Analytics pipeline with a copy activity. Sy
 
     ![The copy data button is highlighted.](media/new-copy-data.png "Integrate")
 
-3. Enter **`CopyAccountData`** for the task name, then select **Next**.
+3. Select **Built-in copy task (1)** and **Run once now (2)**, then select **Next (3)**.
 
     ![The task name is highlighted.](media/copy-properties.png "Properties")
 
-4. Select the **publicdata** source data store, then select **Next**.
+4. Select the **publicdata (1)** source as connection. Copy and paste `mcw-cosmosdb/accounts/` for the folder path (you cannot browse the public data source), check **Recursively**, then select **Next**.
 
-    ![The publicdata source is highlighted.](media/copy-source.png "Source data store")
+    ![The publicdata source is highlighted. Folder path is set. Recursively is checked.](media/copy-source.png "Source data store settings")
 
-5. Copy and paste `mcw-cosmosdb/accounts/` for the folder path (you cannot browse the public data source), check **Recursively**, then select **Next**.
-
-    ![The form is completed as described.](media/copy-input-folder.png "Choose the input file or folder")
-
-6. Select the `JSON` file format and check `Export as-is to JSON files or Cosmos DB collection`, then select **Next**.
+5. Select the `JSON` **(1)** file format and check `Export as-is to JSON files or Cosmos DB collection` **(2)**, then select **Next (3)**.
 
     ![The form is configured as described.](media/copy-file-format.png "File format settings")
 
-7. Select the **WoodgroveCosmosDb** destination data store, then select **Next**.
+6. Select the **WoodgroveCosmosDb (2)** destination data store. Select the `metadata` **(2)** container as the destination, then select **Next (3)**.
 
-    ![The Cosmos DB data store is selected.](media/copy-destination.png "Destination data store")
+    ![The Cosmos DB data store and metadata container are selected.](media/copy-destination.png "Destination data store")
 
-8. Select the `metadata` container as the destination, then select **Next**.
-
-    ![The metadata container is selected.](media/copy-table-mapping.png "Table mapping")
-
-9. Expand the `Advanced settings` section under Settings, then set the degree of copy parallelism to **32**, then select **Next**.
+7. Enter `CopyAccountData` for the task name **(1)**. Expand the `Advanced` section under Settings, then set the degree of copy parallelism to **32**, then select **Next (3)**.
 
     ![The settings blade is shown.](media/copy-settings.png "Settings")
 
-10. In the Summary blade, select **Next**.
+8. In the Summary blade, select **Next**.
 
-    ![The summary blade is shown.](media/copy-summary.png "Summary")
+   ![The summary blade is shown.](media/copy-summary.png "Summary")
 
-11. Once the deployment is complete, select **Monitor**.
+9. Once the deployment is complete, select **Monitor**.
 
-    ![The Monitor button is highlighted.](media/copy-monitor-button.png "Deployment complete")
+   ![The Monitor button is highlighted.](media/copy-monitor-button.png "Deployment complete")
 
-12. It will take between 3 and 5 minutes for the pipeline run to complete. You may need to refresh the list a few times to see the status change.
+10. It will take between 3 and 5 minutes for the pipeline run to complete. You may need to refresh the list a few times to see the status change.
 
     ![The pipeline run is displayed.](media/copy-pipeline-monitor.png "Pipeline runs")
 
@@ -1171,15 +1161,17 @@ In this task, you will execute Synapse Notebooks to perform both near real-time 
         return ws
     ```
 
-6. Select the **Batch-scoring-analytical-store** notebook.
+6. Execute all the cells in the **Real-time-scoring** notebook.
+
+7. Select the **Batch-scoring-analytical-store** notebook.
 
     ![The notebook is selected.](media/notebook-batch-scoring.png "Batch-scoring-analytical-store")
 
-7. In the **Batch-scoring-analytical-store** notebook, follow the instructions to complete the remaining steps of this task.
+8. In the **Batch-scoring-analytical-store** notebook, follow the instructions to complete the remaining steps of this task. Execute all the cells in the **Batch-scoring-analytical-store** notebook.
 
     > In the cell that requires the Azure Machine Learning connection information, enter the same values you copied from the **Prepare batch scoring model** Azure ML notebook.
 
-8. If you receive an error stating "Session job is rejected because the session of the size specified cannot be allocated, due to core capacity being exceeded", then you need to stop the Spark session of the previous notebook.
+9. If you receive an error stating "Session job is rejected because the session of the size specified cannot be allocated, due to core capacity being exceeded", then you need to stop the Spark session of the previous notebook.
 
     ![The error is displayed.](media/session-job-rejected.png "Session job rejected")
 

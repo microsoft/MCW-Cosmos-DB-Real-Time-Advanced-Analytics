@@ -40,7 +40,7 @@ Microsoft and the trademarks listed at <https://www.microsoft.com/en-us/legal/in
 
 ## Requirements
 
-1. Microsoft Azure subscription (non-Microsoft subscription, must be a pay-as-you subscription).
+1. Microsoft Azure subscription (non-Microsoft subscription, must be a pay-as-you-go subscription).
 2. **IMPORTANT**: To complete the OAuth 2.0 access components of this hands-on lab you must have permissions within your Azure subscription to create an App Registration and service principal within Azure Active Directory.
 
 ## Before the hands-on lab
@@ -59,7 +59,7 @@ Download a starter project that includes a payment data generator that sends rea
 
 2. In a web browser, navigate to the [Cosmos DB real-time advanced analytics MCW repo](https://github.com/Microsoft/MCW-Cosmos-DB-Real-Time-Advanced-Analytics).
 
-3. On the repo page, select **Clone or download**, then select **Download ZIP**.
+3. On the repo page, select **Code (1)**, then select **Download ZIP (2)**.
 
    ![Download .zip containing the repository](media/git-hub-download-repo.png 'Download ZIP')
 
@@ -75,25 +75,33 @@ Power BI desktop is required to make a connection to your Azure Databricks envir
 
 In this task, you will create an Azure resource group for the resources used throughout this lab.
 
-1. In the [Azure portal](https://portal.azure.com), select **Resource groups** from the left-hand navigation menu, select **+Add**, and then enter the following in the Create a resource group blade:
+In this task, you create an Azure resource group to serve as a container for the resources used throughout this lab.
 
-   - **Subscription**: Select the subscription you are using for this hands-on lab.
+1. In the [Azure portal](https://portal.azure.com), select **Resource groups** from the Azure services list.
 
-   - **Resource group name**: Enter hands-on-lab-SUFFIX.
+   ![Resource groups are highlighted in the Azure services list.](media/azure-services-resource-groups.png "Azure services")
 
-   - **Region**: Select the region you would like to use for resources in this hands-on lab. Remember this location so you can use it for the other resources you'll provision throughout this lab.
+2. On the Resource groups blade, select **+Create**.
 
-     ![Add Resource group Resource groups is highlighted in the navigation pane of the Azure portal, +Add is highlighted in the Resource groups blade, and "hands-on-labs" is entered into the Resource group name box on the Create an empty resource group blade.](./media/create-resource-group.png 'Create resource group')
+   ![+Add is highlighted in the toolbar on Resource groups blade.](media/resource-groups-add.png "Resource groups")
 
-2. Select **Review + create**.
+3. On the Create a resource group **Basics** tab, enter the following:
 
-3. On the Summary blade, select **Create** to provision your resource group.
+   - **Subscription (1)**: Select the subscription you are using for this hands-on lab.
+   - **Resource group (2)**: Enter **hands-on-lab-SUFFIX** as the name of the new resource group.
+   - **Region (3)**: Select the region you are using for this hands-on lab.
+
+   ![The values specified above are entered into the Create a resource group Basics tab.](media/create-resource-group.png "Create resource group")
+
+4. Select **Review + Create (4)**.
+
+5. On the **Review + create** tab, ensure the Validation passed message is displayed and then select **Create**.
 
 ### Task 4: Deploy Environment
 
 1. Deploy the workspace through the following Azure ARM template (press the button below):
 
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2FMCW-Cosmos-DB-Real-Time-Advanced-Analytics%2Fmaster%2FHands-on%20lab%2FDeployment%2Fenvironment-template.json" target="_blank"><img src="http://azuredeploy.net/deploybutton.png" /></a>
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2FMCW-Cosmos-DB-Real-Time-Advanced-Analytics%2Fmaster%2FHands-on%20lab%2FDeployment%2Fenvironment-template.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
 
 2. Enter the following values, then select **Review + create**:
 
