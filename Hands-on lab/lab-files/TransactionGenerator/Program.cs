@@ -139,14 +139,14 @@ namespace TransactionGenerator
                         cosmosTimer.Start();
 
                         // Send to Cosmos DB:
-                        // TODO 4: Complete this code to send the Transaction object to Cosmos DB. Capture the returned ResourceResponse object to a new variable.
+                        // TODO 1: Complete this code to send the Transaction object to Cosmos DB. Capture the returned ResourceResponse object to a new variable.
                         // COMPLETE THIS CODE ... var response = await ...
 
                         cosmosTimer.Stop();
                         _cosmosElapsedTime = cosmosTimer.ElapsedMilliseconds;
 
                         // Keep running total of RUs consumed:
-                        // TODO 5: Complete this code to append the number of RU/s consumed to the _cosmosRUsPerBatch variable.
+                        // TODO 2: Complete this code to append the number of RU/s consumed to the _cosmosRUsPerBatch variable.
                         // WRITE CODE HERE
 
                         _cosmosRequestsSucceededInBatch++;
@@ -188,14 +188,14 @@ namespace TransactionGenerator
                                 // Send to Event Hubs:
                                 foreach (var eventHubClient in eventHubClients)
                                 {
-                                    // TODO 1: Complete code to send to Event Hub.
+                                    // TODO 4: Complete code to send to Event Hub.
                                     // COMPLETE THIS CODE ... await eventHubClient // Send eventData and set the partition key to the IpCountryCode field.
                                 }
 
                                 eventHubsTimer.Stop();
                                 _eventHubElapsedTime = eventHubsTimer.ElapsedMilliseconds;
 
-                                // TODO 2: Complete code to increment the count of number of Event Hub requests that succeeded.
+                                // TODO 5: Complete code to increment the count of number of Event Hub requests that succeeded.
                                 // COMPLETE THIS CODE
                             }
                             catch (Exception e)
@@ -367,7 +367,7 @@ namespace TransactionGenerator
             var statistics = new Statistic[0];
 
             // Set the Cosmos DB connection policy.
-            // TODO 6: Complete the code below to create a Cosmos DB connection policy that has a Direct Connection Mode and uses the TCP Connection Protocol.
+            // TODO 3: Complete the code below to create a Cosmos DB connection policy that has a Direct Connection Mode and uses the TCP Connection Protocol.
             // COMPLETE THIS CODE ... var connectionPolicy = new ConnectionPolicy...
 
             var numberOfMillisecondsToLead = arguments.MillisecondsToLead;
@@ -415,7 +415,7 @@ namespace TransactionGenerator
             // Instantiate Event Hub client(s):
             var eventHubClients = new List<EventHubClient>
             {
-                // TODO 3: Create an Event Hub Client from a connection string, using the EventHubConnectionString value.
+                // TODO 6: Create an Event Hub Client from a connection string, using the EventHubConnectionString value.
 
                 // TODO 8: Create additional Event Hub clients from remaining two connection strings.
             };
