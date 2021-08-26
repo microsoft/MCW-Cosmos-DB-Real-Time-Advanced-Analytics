@@ -1408,7 +1408,7 @@ Later in this exercise, you will add a Power BI Linked Service. When you do this
 
     ![The Workspaces and Create a workspace buttons are highlighted.](media/pbi-create-workspace.png "Create a workspace")
 
-3. Enter **Woodgrove** for the workspace name, then select **Save**.
+3. Enter **Woodgrove** (or some other unique name if it is already used in your organization) for the workspace name, then select **Save**.
 
     ![The form is displayed as described.](media/pbi-create-workspace-form.png "Create a workspace")
 
@@ -1731,13 +1731,13 @@ In this exercise, you will use the data generator to send data to both Event Hub
 
 9. On the Create Namespace blade, enter the following:
 
+   - **Subscription**: Select the subscription you are using for this hands-on lab.
+   - **Resource group**: Choose the hands-on-lab-SUFFIX resource group.
    - **Name**: Enter a globally unique name (indicated by a green check mark).
+   - **Location**: Select **UK South**. (If you already selected this for the first Event Hub namespace, select a US region)
    - **Pricing tier**: Select Standard.
    - **Enable Kafka**: Unchecked
    - **Make this namespace zone redundant**: Unchecked
-   - **Subscription**: Select the subscription you are using for this hands-on lab.
-   - **Resource group**: Choose the hands-on-lab-SUFFIX resource group.
-   - **Location**: Select **UK South**. (If you already selected this for the first Event Hub namespace, select a US region)
    - **Throughput Units**: Set the slider all the way to the left, setting the value to 1.
    - **Enable Auto-Inflate**: Unchecked
 
@@ -1745,7 +1745,7 @@ In this exercise, you will use the data generator to send data to both Event Hub
 
    >**Note**: You may only see some of these settings if you navigate to the **Features** tab in the **Create Namespace** page.
 
-10. Select **Create**.
+10. Select **Review + create**, then select **Create**.
 
 11. Navigate to the newly provisioned Event Hubs namespace in the Azure portal, then select **Event Hubs** under Entities on the left-hand menu.
 
