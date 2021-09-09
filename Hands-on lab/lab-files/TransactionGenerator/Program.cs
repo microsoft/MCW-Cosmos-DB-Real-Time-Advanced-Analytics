@@ -3,33 +3,30 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.EventHubs;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
+using Azure.Messaging.EventHubs;
 using System.Security;
-using Newtonsoft.Json;
-using System.Threading.Tasks.Dataflow;
+using Azure.Messaging.EventHubs.Producer;
 using Microsoft.Extensions.Configuration;
 using Polly;
 using Polly.Bulkhead;
 using TransactionGenerator.OutputHelpers;
+using Microsoft.Azure.Cosmos;
 
 namespace TransactionGenerator
 {
     internal class Program
     {
-        private static DocumentClient _cosmosDbClient;
+        //private static DocumentClient _cosmosDbClient;
+        private static CosmosClient _cosmosDbClient;
         private static IConfigurationRoot _configuration;
 
         private const string DatabaseName = "Woodgrove";
         private const string CollectionName = "transactions";
-        private const string PartitionKey = "ipCountryCode";
+        private const string PartitionKey = "/ipCountryCode";
         private static readonly object LockObject = new object();
         // AutoResetEvent to signal when to exit the application.
         private static readonly AutoResetEvent WaitHandle = new AutoResetEvent(false);
@@ -83,7 +80,7 @@ namespace TransactionGenerator
 
         // Send data to Cosmos DB and Event Hub:
         private static async Task SendData(List<Transaction> transactions,
-            List<EventHubClient> eventHubClients, int randomSeed, int waittime,
+            List<EventHubProducerClient> eventHubClients, int randomSeed, int waittime,
             CancellationToken externalCancellationToken, IProgress<Progress> progress,
             bool onlyWriteToCosmosDb)
         {
@@ -113,8 +110,9 @@ namespace TransactionGenerator
             var eventHubsTimer = new Stopwatch();
             var cosmosTimer = new Stopwatch();
 
-            // Create the Cosmos DB collection URI:
-            var collectionUri = UriFactory.CreateDocumentCollectionUri(DatabaseName, CollectionName);
+            // Create the Cosmos DB database and container references:
+            var database = _cosmosDbClient.GetDatabase(DatabaseName);
+            var container = database.GetContainer(CollectionName);
 
             // Ensure none of what follows runs synchronously.
             await Task.FromResult(true).ConfigureAwait(false);
@@ -151,9 +149,9 @@ namespace TransactionGenerator
 
                         _cosmosRequestsSucceededInBatch++;
                     }
-                    catch (DocumentClientException de)
+                    catch (CosmosException de)
                     {
-                        if (!ct.IsCancellationRequested) messages.Enqueue(new ColoredMessage($"Cosmos DB request {thisRequest} eventually failed with: {de.Message}; Retry-after: {de.RetryAfter.TotalSeconds} seconds.", Color.Red));
+                        if (!ct.IsCancellationRequested) messages.Enqueue(new ColoredMessage($"Cosmos DB request {thisRequest} eventually failed with: {de.Message}; Retry-after: {de.RetryAfter} seconds.", Color.Red));
 
                         _cosmosRequestsFailed++;
                     }
@@ -182,14 +180,15 @@ namespace TransactionGenerator
                         {
                             try
                             {
-                                var eventData = new EventData(Encoding.UTF8.GetBytes(transaction.GetData()));
+                                var eventData = new EventData(new BinaryData(transaction.GetData()));
+                                
                                 eventHubsTimer.Start();
 
                                 // Send to Event Hubs:
                                 foreach (var eventHubClient in eventHubClients)
                                 {
                                     // TODO 4: Complete code to send to Event Hub.
-                                    // COMPLETE THIS CODE ... await eventHubClient // Send eventData and set the partition key to the IpCountryCode field.
+                                    // COMPLETE THIS CODE ... using var eventBatch = // Send eventData and set the partition key to the IpCountryCode field.
                                 }
 
                                 eventHubsTimer.Stop();
@@ -350,7 +349,7 @@ namespace TransactionGenerator
             }
         }
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             // Setup configuration to either read from the appsettings.json file (if present) or environment variables.
             var builder = new ConfigurationBuilder()
@@ -367,8 +366,8 @@ namespace TransactionGenerator
             var statistics = new Statistic[0];
 
             // Set the Cosmos DB connection policy.
-            // TODO 3: Complete the code below to create a Cosmos DB connection policy that has a Direct Connection Mode and uses the TCP Connection Protocol.
-            // COMPLETE THIS CODE ... var connectionPolicy = new ConnectionPolicy...
+            // TODO 3: Complete the code below to create a Cosmos DB connection policy that has a Direct Connection Mode.
+            // COMPLETE THIS CODE ... var clientOptions = new CosmosClientOptions...
 
             var numberOfMillisecondsToLead = arguments.MillisecondsToLead;
 
@@ -413,7 +412,7 @@ namespace TransactionGenerator
             var paymentRecords = GetTransactionData(Transaction.FromString);
 
             // Instantiate Event Hub client(s):
-            var eventHubClients = new List<EventHubClient>
+            var eventHubClients = new List<EventHubProducerClient>
             {
                 // TODO 6: Create an Event Hub Client from a connection string, using the EventHubConnectionString value.
 
@@ -421,25 +420,25 @@ namespace TransactionGenerator
             };
 
             // Instantiate Cosmos DB client and start sending messages to Event Hubs and Cosmos DB:
-            using (_cosmosDbClient = new DocumentClient(new Uri(arguments.CosmosDbEndpointUrl),
-                ConvertToSecureString(arguments.CosmosDbAuthorizationKey), connectionPolicy))
+            using (_cosmosDbClient = new CosmosClient(arguments.CosmosDbEndpointUrl,
+                arguments.CosmosDbAuthorizationKey, clientOptions))
             {
-                InitializeCosmosDb().Wait();
+                await InitializeCosmosDb();
 
                 // Find and output the collection details, including # of RU/s.
-                var dataCollection = GetCollectionIfExists(DatabaseName, CollectionName);
-                var offer = (OfferV2)_cosmosDbClient.CreateOfferQuery().Where(o => o.ResourceLink == dataCollection.SelfLink).AsEnumerable().FirstOrDefault();
-                if (offer != null)
+                var container = GetContainerIfExists(DatabaseName, CollectionName);
+                var throughputResponse = await container.ReadThroughputAsync(requestOptions: null, cancellationToken: cancellationToken);
+                
+                if (throughputResponse != null)
                 {
-                    var currentCollectionThroughput = offer.Content.OfferThroughput;
-                    WriteLineInColor($"Found collection `{CollectionName}` with {currentCollectionThroughput} RU/s ({currentCollectionThroughput} reads/second; {currentCollectionThroughput / 5} writes/second @ 1KB doc size)", ConsoleColor.Green);
-                    var estimatedCostPerMonth = 0.06 * offer.Content.OfferThroughput;
+                    WriteLineInColor($"Found container `{CollectionName}` with a current throughput of {throughputResponse.Resource.Throughput} RU/s with a max throughput of {throughputResponse.Resource.AutoscaleMaxThroughput} reads/second; {throughputResponse.Resource.AutoscaleMaxThroughput / 5} writes/second @ 1KB doc size", ConsoleColor.Green);
+                    var estimatedCostPerMonth = 0.06 * throughputResponse.Resource.AutoscaleMaxThroughput;
                     var estimatedCostPerHour = estimatedCostPerMonth / (24 * 30);
-                    WriteLineInColor($"The collection will cost an estimated ${estimatedCostPerHour:0.00} per hour (${estimatedCostPerMonth:0.00} per month (per write region))", ConsoleColor.Green);
+                    WriteLineInColor($"The container will cost a maximum of ${estimatedCostPerHour:0.00} per hour (${estimatedCostPerMonth:0.00} per month (per write region))", ConsoleColor.Green);
                 }
 
                 // Start sending data to both Event Hubs and Cosmos DB.
-                SendData(paymentRecords, eventHubClients, 100, taskWaitTime, cancellationToken, progress, arguments.OnlyWriteToCosmosDb).Wait();
+                await SendData(paymentRecords, eventHubClients, 100, taskWaitTime, cancellationToken, progress, arguments.OnlyWriteToCosmosDb);
             }
 
             cancellationSource.Cancel();
@@ -468,51 +467,35 @@ namespace TransactionGenerator
 
         private static async Task InitializeCosmosDb()
         {
-            await _cosmosDbClient.CreateDatabaseIfNotExistsAsync(new Database { Id = DatabaseName });
-
-            // We create a partitioned collection here which needs a partition key. Partitioned collections
-            // can be created with very high values of provisioned throughput (up to OfferThroughput = 250,000)
-            // and used to store up to 250 GB of data.
-            var collectionDefinition = new DocumentCollection { Id = CollectionName };
-
+            Database database = await _cosmosDbClient.CreateDatabaseIfNotExistsAsync(DatabaseName);
+            
             // Create a partition based on the ipCountryCode value from the Transactions data set.
             // This partition was selected because the data will most likely include this value, and
             // it allows us to partition by location from which the transaction originated. This field
             // also contains a wide range of values, which is preferable for partitions.
-            collectionDefinition.PartitionKey.Paths.Add($"/{PartitionKey}");
-
-            // Use the recommended indexing policy which supports range queries/sorting on strings.
-            collectionDefinition.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.String) { Precision = -1 });
-
-            // Create with a throughput of 25000 RU/s.
-            await _cosmosDbClient.CreateDocumentCollectionIfNotExistsAsync(
-                UriFactory.CreateDatabaseUri(DatabaseName),
-                collectionDefinition,
-                new RequestOptions { OfferThroughput = 25000 });
-        }
-
-        /// <summary>
-        /// Get the database if it exists, null if it doesn't.
-        /// </summary>
-        /// <returns>The requested database</returns>
-        private static Database GetDatabaseIfExists(string databaseName)
-        {
-            return _cosmosDbClient.CreateDatabaseQuery().Where(d => d.Id == databaseName).AsEnumerable().FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Get the collection if it exists, null if it doesn't.
-        /// </summary>
-        /// <returns>The requested collection</returns>
-        private static DocumentCollection GetCollectionIfExists(string databaseName, string collectionName)
-        {
-            if (GetDatabaseIfExists(databaseName) == null)
+            var containerProperties = new ContainerProperties(CollectionName, PartitionKey)
             {
-                return null;
-            }
+                // The default indexing policy for newly created containers is set to automatic and enforces
+                // range indexes for any string or number.
+                IndexingPolicy = {Automatic = true}
+            };
 
-            return _cosmosDbClient.CreateDocumentCollectionQuery(UriFactory.CreateDatabaseUri(databaseName))
-                .Where(c => c.Id == collectionName).AsEnumerable().FirstOrDefault();
+            // Create the container with a maximum autoscale throughput of 4000 RU/s. By default, the
+            // minimum RU/s will be 400.
+            var container = await database.CreateContainerIfNotExistsAsync(
+                containerProperties: containerProperties,
+                throughputProperties: ThroughputProperties.CreateAutoscaleThroughput(autoscaleMaxThroughput: 4000));
+        }
+
+        /// <summary>
+        /// Get the container if it exists, null if it doesn't.
+        /// </summary>
+        /// <returns>The requested container</returns>
+        private static Container GetContainerIfExists(string databaseName, string containerName)
+        {
+            var database = _cosmosDbClient.GetDatabase(databaseName);
+
+            return database?.GetContainer(containerName);
         }
 
         public static Progress ProgressWithMessage(string message)
