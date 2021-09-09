@@ -200,8 +200,7 @@ Next, you will configure the payment transaction data generator project by compl
 14. Open `Program.cs` and paste the code below under **TODO 1** to send the generated transaction data to Cosmos DB and store the returned `ResourceResponse` object into a new variable for statistics about RU/s used:
 
     ```csharp
-    var response = await _cosmosDbClient.CreateDocumentAsync(collectionUri, transaction)
-        .ConfigureAwait(false);
+    var response = await container.CreateItemAsync(transaction, cancellationToken: ct);
     ```
 
     Your code should look like the following:
@@ -217,10 +216,9 @@ Next, you will configure the payment transaction data generator project by compl
 16. Paste the code below under **TODO 3** to set the Cosmos DB connection policy:
 
     ```csharp
-    var connectionPolicy = new ConnectionPolicy
+    var clientOptions = new CosmosClientOptions
     {
-        ConnectionMode = ConnectionMode.Direct,
-        ConnectionProtocol = Protocol.Tcp
+        ConnectionMode = ConnectionMode.Direct
     };
     ```
 
@@ -1669,8 +1667,9 @@ In this task, you will configure the payment transaction data generator project 
 7. Go to **TODO 4** located in `Program.cs` by double-clicking the item in the Task List. Paste the following code under TODO 4, which uses the Event Hub client to send the event data, setting the partition key to `IpCountryCode`:
 
     ```csharp
-    await eventHubClient.SendAsync(eventData: eventData,
-        partitionKey: transaction.IpCountryCode).ConfigureAwait(false);
+    using var eventBatch = await eventHubClient.CreateBatchAsync(new CreateBatchOptions { PartitionKey = transaction.IpCountryCode }, ct);
+    eventBatch.TryAdd(eventData);
+    await eventHubClient.SendAsync(eventBatch, ct);
     ```
     
     > **Note**: The /ipCountryCode partition was selected because the data will most likely include this value, and it allows us to partition by location from which the transaction originated. This field also contains a wide range of values, which is preferable for partitions.
@@ -1684,9 +1683,7 @@ In this task, you will configure the payment transaction data generator project 
 9. Paste the code below under **TODO 6** to instantiate a new Event Hub client and add it to the `eventHubClients` collection:
 
     ```csharp
-    EventHubClient.CreateFromConnectionString(
-        arguments.EventHubConnectionString
-    ),
+    new EventHubProducerClient(arguments.EventHubConnectionString),
     ```
 
 10. Save your changes.
@@ -1819,12 +1816,8 @@ In this exercise, you will use the data generator to send data to both Event Hub
 28. Open `Program.cs` and paste the below code underneath **TODO 8** to add two new Event Hub clients to the `eventHubClients` collection, using the two new connection string values:
 
     ```csharp
-    EventHubClient.CreateFromConnectionString(
-        arguments.EventHub2ConnectionString
-    ),
-    EventHubClient.CreateFromConnectionString(
-        arguments.EventHub3ConnectionString
-    )
+    new EventHubProducerClient(arguments.EventHub2ConnectionString),
+    new EventHubProducerClient(arguments.EventHub3ConnectionString)
     ```
 
     ![Screenshot displaying completed code.](media/event-hub-clients-added.png 'Program.cs')
