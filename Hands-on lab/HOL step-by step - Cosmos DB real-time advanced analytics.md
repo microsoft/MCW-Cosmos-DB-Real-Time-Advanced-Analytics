@@ -944,7 +944,14 @@ The SQL views require the Azure Cosmos DB account name and account key.
     GO
     ```
 
-4. Replace the SQL query with the following to create a new view that displays the customer account data you imported with the copy pipeline earlier in this lab. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name and **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+4. Replace the SQL query with the following to create a secure server credential to store the Azure Cosmos DB account key. This credential will be used by all of the queries that follow to enable secure connectivity to the account. Replace **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+
+    ```sql
+    CREATE CREDENTIAL WoodgroveCosmosDbCredential
+    WITH IDENTITY = 'SHARED ACCESS SIGNATURE', SECRET = 'YOUR_ACCOUNT_KEY';
+    ```
+
+5. Replace the SQL query with the following to create a new view that displays the customer account data you imported with the copy pipeline earlier in this lab. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name that you copied in Task 1 above.
 
     ```sql
     USE Woodgrove
@@ -978,9 +985,10 @@ The SQL views require the Azure Cosmos DB account name and account key.
         id
     FROM OPENROWSET
         (
-            'CosmosDB',
-            N'account=YOUR_ACCOUNT_NAME;database=Woodgrove;key=YOUR_ACCOUNT_KEY',
-            metadata
+            PROVIDER = 'CosmosDB',
+            CONNECTION = N'account=YOUR_ACCOUNT_NAME;database=Woodgrove',
+            OBJECT = 'metadata',
+            SERVER_CREDENTIAL = 'WoodgroveCosmosDbCredential'
         )
     WITH (
         accountID varchar(50),
@@ -1056,7 +1064,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     }
     ```
 
-5. Replace the SQL query with the following to create a view for the `SuspiciousAgg` data. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name and **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+6. Replace the SQL query with the following to create a view for the `SuspiciousAgg` data. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name that you copied in Task 1 above.
 
     ```sql
     USE Woodgrove
@@ -1076,9 +1084,10 @@ The SQL views require the Azure Cosmos DB account name and account key.
         ,[PercentSuspicious]
     FROM OPENROWSET
         (
-            'CosmosDB',
-            N'account=YOUR_ACCOUNT_NAME;database=Woodgrove;key=YOUR_ACCOUNT_KEY',
-            suspicious_transactions
+            PROVIDER = 'CosmosDB',
+            CONNECTION = N'account=YOUR_ACCOUNT_NAME;database=Woodgrove',
+            OBJECT = 'suspicious_transactions',
+            SERVER_CREDENTIAL = 'WoodgroveCosmosDbCredential'
         )
     WITH (
         [collectionType] varchar(50)
@@ -1091,7 +1100,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     WHERE collectionType = 'SuspiciousAgg'
     ```
 
-6. Replace the SQL query with the following to create a view for the `SuspiciousTransactions` data. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name and **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+7. Replace the SQL query with the following to create a view for the `SuspiciousTransactions` data. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name that you copied in Task 1 above.
 
     ```sql
     USE Woodgrove
@@ -1112,9 +1121,10 @@ The SQL views require the Azure Cosmos DB account name and account key.
         transactionDateTime, isSuspicious, collectionType
     FROM OPENROWSET
         (
-            'CosmosDB',
-            N'account=YOUR_ACCOUNT_NAME;database=Woodgrove;key=YOUR_ACCOUNT_KEY',
-            suspicious_transactions
+            PROVIDER = 'CosmosDB',
+            CONNECTION = N'account=YOUR_ACCOUNT_NAME;database=Woodgrove',
+            OBJECT = 'suspicious_transactions',
+            SERVER_CREDENTIAL = 'WoodgroveCosmosDbCredential'
         )
     WITH (
         transactionID varchar(50),
@@ -1151,7 +1161,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     WHERE collectionType = 'SuspiciousTransactions'
     ```
 
-7. Replace the SQL query with the following to create a view for the `Transactions` data to access all transactions. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name and **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+8. Replace the SQL query with the following to create a view for the `Transactions` data to access all transactions. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name that you copied in Task 1 above.
 
     ```sql
     USE Woodgrove
@@ -1172,9 +1182,10 @@ The SQL views require the Azure Cosmos DB account name and account key.
         transactionDateTime, collectionType
     FROM OPENROWSET
         (
-            'CosmosDB',
-            N'account=YOUR_ACCOUNT_NAME;database=Woodgrove;key=YOUR_ACCOUNT_KEY',
-            transactions
+            PROVIDER = 'CosmosDB',
+            CONNECTION = N'account=YOUR_ACCOUNT_NAME;database=Woodgrove',
+            OBJECT = 'transactions',
+            SERVER_CREDENTIAL = 'WoodgroveCosmosDbCredential'
         )
     WITH (
         transactionID varchar(50),
@@ -1210,7 +1221,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     WHERE collectionType = 'Transaction'
     ```
 
-8. Replace the SQL query with the following to create a view that joins the suspicious transactions with user account information. We use an INNER JOIN between the `SuspiciousTransactions` view and the `Accounts` view:
+9. Replace the SQL query with the following to create a view that joins the suspicious transactions with user account information. We use an INNER JOIN between the `SuspiciousTransactions` view and the `Accounts` view:
 
     ```sql
     USE Woodgrove
@@ -1246,7 +1257,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     FROM SuspiciousTransactions t INNER JOIN Accounts a ON t.accountID = a.accountID
     ```
 
-9. Replace the SQL query with the following to create a view that counts the number of suspicious vs. non-suspicious transactions per account (user), referencing the `Transactions` and `SuspiciousTransactions` views you created. Then we select from the new view where `SuspiciousCount > 0`.
+10. Replace the SQL query with the following to create a view that counts the number of suspicious vs. non-suspicious transactions per account (user), referencing the `Transactions` and `SuspiciousTransactions` views you created. Then we select from the new view where `SuspiciousCount > 0`.
 
     ```sql
     USE Woodgrove
