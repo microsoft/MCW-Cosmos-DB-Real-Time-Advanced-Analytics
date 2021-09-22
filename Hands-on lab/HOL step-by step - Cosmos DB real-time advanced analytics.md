@@ -64,8 +64,9 @@ Microsoft and the trademarks listed at <https://www.microsoft.com/en-us/legal/in
     - [Task 1: Retrieve the Synapse SQL Serverless endpoint address](#task-1-retrieve-the-synapse-sql-serverless-endpoint-address)
     - [Task 2: Create Power BI workspace](#task-2-create-power-bi-workspace)
     - [Task 3: Utilizing Power BI to summarize and visualize global fraud trends](#task-3-utilizing-power-bi-to-summarize-and-visualize-global-fraud-trends)
-    - [Task 4: Publish report and add Power BI Linked Service](#task-4-publish-report-and-add-power-bi-linked-service)
-    - [Task 5: View the report in Synapse Studio](#task-5-view-the-report-in-synapse-studio)
+    - [Task 4: Refresh report](#task-4-refresh-report)
+    - [Task 5: Publish report and add Power BI Linked Service](#task-5-publish-report-and-add-power-bi-linked-service)
+    - [Task 6: View the report in Synapse Studio](#task-6-view-the-report-in-synapse-studio)
   - [Exercise 9 (Optional): Collecting streaming transaction data](#exercise-9-optional-collecting-streaming-transaction-data)
     - [Task 1: Retrieve Event Hubs Connection String](#task-1-retrieve-event-hubs-connection-string)
     - [Task 2: Configuring Event Hubs and the transaction generator](#task-2-configuring-event-hubs-and-the-transaction-generator)
@@ -1547,7 +1548,29 @@ In this task, you will use the Synapse SQL Serverless service endpoint to connec
 
     ![The visualizations are filtered by the selected account.](media/power-bi-filtered.png "Filtered view")
 
-### Task 4: Publish report and add Power BI Linked Service
+### Task 4: Refresh report
+
+When you connected to the Synapse serverless SQL endpoint for this report, you selected the Import option. The data on the report is a snapshot of the data when you added the tables. In this task, you re-run the transaction generator app and refresh the report.
+
+1. On Page 2 of the report, observe the total `SuspiciousCount` and `NonSuspiciousCount` values on the bottom of the Matrix visualization.
+
+    ![The totals on the bottom of the Matrix visualization are highlighted.](media/power-bi-matrix-totals.png "Matrix totals")
+
+2. Switch back to Visual Studio and run the transaction generator for a few minutes. Make sure that it sends at least a few thousand transactions before closing it.
+
+3. Return to the report in Power BI Desktop, then select the **Refresh** button above the report.
+
+    ![The refresh button is highlighted.](media/power-bi-report-refresh.png "Refresh")
+
+    The refresh dialog will appear, showing the refresh status of each table and view. Wait for the operation to complete.
+
+    ![The refresh dialog is displayed.](media/power-bi-refresh-dialog.png "Refresh dialog")
+
+4. Once again, observe the total `SuspiciousCount` and `NonSuspiciousCount` values on the bottom of the Matrix visualization. The values should be higher than they were before you re-ran the transaction generator and refreshed the report.
+
+    ![The new Matrix totals are highlighted.](media/power-bi-matrix-totals-refreshed.png "Matrix totals")
+
+### Task 5: Publish report and add Power BI Linked Service
 
 So far, the report you created is only available to you. To share the report with others, you need to publish it to the Power BI online service. Once you've published your report, you can make it available within Synapse Studio, along with other reports published to your workspace.
 
@@ -1583,7 +1606,7 @@ In this task, you save and publish your report online, then create a Power BI Li
 
     ![The Power BI linked service form is displayed.](media/linked-service-power-bi-form.png "New linked service (Power BI)")
 
-### Task 5: View the report in Synapse Studio
+### Task 6: View the report in Synapse Studio
 
 1. Navigate to the **Develop** hub.
 
