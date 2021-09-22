@@ -11,6 +11,11 @@ namespace TransactionGenerator
     [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     public class Transaction
     {
+        /// <summary>
+        /// Cosmos DB item id.
+        /// </summary>
+        [JsonProperty] public string id { get; set; }
+
         [JsonProperty] public string TransactionID { get; set; }
 
         [JsonProperty] public string AccountID { get; set; }
@@ -111,6 +116,8 @@ namespace TransactionGenerator
             };
             try
             {
+                // Generate a random Cosmos DB document ID to allow for re-inserting the same data each time the generator runs.
+                tx.id = Guid.NewGuid().ToString();
                 tx.TransactionID = tokens[0];
                 tx.AccountID = tokens[1];
                 tx.TransactionAmountUSD = double.TryParse(tokens[2], out var dresult) ? dresult : 0.0;
