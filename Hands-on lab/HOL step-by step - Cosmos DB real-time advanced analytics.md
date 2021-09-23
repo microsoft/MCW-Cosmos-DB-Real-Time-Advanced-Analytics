@@ -9,7 +9,7 @@ Hands-on lab step-by-step
 </div>
 
 <div class="MCWHeader3">
-October 2020
+September 2021
 </div>
 
 Information in this document, including URL and other Internet Web site references, is subject to change without notice. Unless otherwise noted, the example companies, organizations, products, domain names, e-mail addresses, logos, people, places, and events depicted herein are fictitious, and no association with any real company, organization, product, domain name, e-mail address, logo, person, place or event is intended or should be inferred. Complying with all applicable copyright laws is the responsibility of the user. Without limiting the rights under copyright, no part of this document may be reproduced, stored in or introduced into a retrieval system, or transmitted in any form or by any means (electronic, mechanical, photocopying, recording, or otherwise), or for any purpose, without the express written permission of Microsoft Corporation.
@@ -18,7 +18,7 @@ Microsoft may have patents, patent applications, trademarks, copyrights, or othe
 
 The names of manufacturers, products, or URLs are provided for informational purposes only and Microsoft makes no representations and warranties, either expressed, implied, or statutory, regarding these manufacturers or the use of the products with any Microsoft technologies. The inclusion of a manufacturer or product does not imply endorsement of Microsoft of the manufacturer or product. Links may be provided to third party sites. Such sites are not under the control of Microsoft and Microsoft is not responsible for the contents of any linked site or any link contained in a linked site, or any changes or updates to such sites. Microsoft is not responsible for webcasting or any other form of transmission received from any linked site. Microsoft is providing these links to you only as a convenience, and the inclusion of any link does not imply endorsement of Microsoft of the site or the products contained therein.
 
-© 2020 Microsoft Corporation. All rights reserved.
+© 2021 Microsoft Corporation. All rights reserved.
 
 Microsoft and the trademarks listed at <https://www.microsoft.com/en-us/legal/intellectualproperty/Trademarks/Usage/General.aspx> are trademarks of the Microsoft group of companies. All other trademarks are property of their respective owners.
 
@@ -32,10 +32,7 @@ Microsoft and the trademarks listed at <https://www.microsoft.com/en-us/legal/in
   - [Solution architecture](#solution-architecture)
   - [Requirements](#requirements)
   - [Exercise 1: Collecting streaming transaction data](#exercise-1-collecting-streaming-transaction-data)
-    - [Task 1: Retrieve Event Hubs Connection String](#task-1-retrieve-event-hubs-connection-string)
-    - [Task 2: Configuring Event Hubs and the transaction generator](#task-2-configuring-event-hubs-and-the-transaction-generator)
-    - [Task 3: Ingesting streaming data into Cosmos DB](#task-3-ingesting-streaming-data-into-cosmos-db)
-    - [Task 4: Choosing between Cosmos DB and Event Hubs for ingestion](#task-4-choosing-between-cosmos-db-and-event-hubs-for-ingestion)
+    - [Task 1: Ingesting streaming data into Cosmos DB](#task-1-ingesting-streaming-data-into-cosmos-db)
   - [Exercise 2: Understanding and preparing the transaction data](#exercise-2-understanding-and-preparing-the-transaction-data)
     - [Task 1: Configure access to the storage account from your workspace](#task-1-configure-access-to-the-storage-account-from-your-workspace)
     - [Task 2: Open Synapse Studio](#task-2-open-synapse-studio)
@@ -67,8 +64,13 @@ Microsoft and the trademarks listed at <https://www.microsoft.com/en-us/legal/in
     - [Task 1: Retrieve the Synapse SQL Serverless endpoint address](#task-1-retrieve-the-synapse-sql-serverless-endpoint-address)
     - [Task 2: Create Power BI workspace](#task-2-create-power-bi-workspace)
     - [Task 3: Utilizing Power BI to summarize and visualize global fraud trends](#task-3-utilizing-power-bi-to-summarize-and-visualize-global-fraud-trends)
-    - [Task 4: Publish report and add Power BI Linked Service](#task-4-publish-report-and-add-power-bi-linked-service)
-    - [Task 5: View the report in Synapse Studio](#task-5-view-the-report-in-synapse-studio)
+    - [Task 4: Refresh report](#task-4-refresh-report)
+    - [Task 5: Publish report and add Power BI Linked Service](#task-5-publish-report-and-add-power-bi-linked-service)
+    - [Task 6: View the report in Synapse Studio](#task-6-view-the-report-in-synapse-studio)
+  - [Exercise 9 (Optional): Collecting streaming transaction data](#exercise-9-optional-collecting-streaming-transaction-data)
+    - [Task 1: Retrieve Event Hubs Connection String](#task-1-retrieve-event-hubs-connection-string)
+    - [Task 2: Configuring Event Hubs and the transaction generator](#task-2-configuring-event-hubs-and-the-transaction-generator)
+    - [Task 3: Choosing between Cosmos DB and Event Hubs for ingestion](#task-3-choosing-between-cosmos-db-and-event-hubs-for-ingestion)
   - [After the hands-on lab](#after-the-hands-on-lab)
     - [Task 1: Delete the resource group](#task-1-delete-the-resource-group)
 
@@ -94,7 +96,7 @@ Below is a diagram of the solution architecture you will build in this lab. Plea
 
 ![The Solution diagram is described in the text following this diagram.](media/outline-architecture.png "Solution diagram")
 
-The data flow for the solution begins with the payment transaction systems writing transactions to Azure Cosmos DB. The lab deployment ARM template enables Synapse Link integration when provisioning the Azure Cosmos DB account. With this feature enabled, we turn on the analytical store when creating each of the containers, which serves as a fully isolated column store that is automatically populated when the payment transaction system writes data to the transactional container. The analytical store enables large-scale analytics against the operational data in Azure Cosmos DB, without impacting the transactional workloads or incurring resource unit (RU) costs. Woodgrove Bank's analysts query historical data within the analytical store and use it to join on reference data stored within the analytical store of other containers and the data lake. They execute these queries using Azure Synapse serverless Apache Spark pools and Azure Synapse serverless SQL pools.
+The data flow for the solution begins with the payment transaction systems writing transactions to Azure Cosmos DB. The lab deployment ARM template enables Synapse Link integration when provisioning the Azure Cosmos DB account. With this feature enabled, we turn on the analytical store (OLAP) when creating each of the containers, which serves as a fully isolated column store that is automatically populated when the payment transaction system writes data to the transactional container (OLTP). The analytical store enables large-scale analytics against the operational data in Azure Cosmos DB, without impacting the transactional workloads or incurring resource unit (RU) costs. Woodgrove Bank's analysts query historical data within the analytical store and use it to join on reference data stored within the analytical store of other containers and the data lake. They execute these queries using Azure Synapse serverless Apache Spark pools and Azure Synapse serverless SQL pools.
 
 Woodgrove requires that the data retention for payment transactions stored in Azure Cosmos DB is set to 60 days and that all payment transactions need to be stored in long-term storage. To meet these requirements, the 'Transactional Store Time to Live (Transactional TTL)' property on the transactions container is enabled, and the TTL value is set to 60 on the documents. This setting automatically deletes payment transactions from the transactional store after the 60-day time period. The 'Analytical Store Time To Live (Analytical TTL)' setting allows Woodgrove Bank to manage the lifecycle of data retained in the analytical store independently from the transactional store. The TTL on the analytical store is set never to expire, enabling Woodgrove to seamlessly tier and define the two stores' data retention period.
 
@@ -115,405 +117,133 @@ Finally, Azure Key Vault is used to securely store secrets, such as account keys
 
 Duration: 30 minutes
 
-In this exercise, you will configure a payment transaction generator to write real-time streaming online payments to both Event Hubs and Azure Cosmos DB. By the end, you will have selected the best ingest option before continuing to the following exercise where you will process the generated data.
+In this exercise, you will configure a payment transaction generator to write real-time streaming online payments to both Event Hubs and Azure Cosmos DB.
 
-### Task 1: Retrieve Event Hubs Connection String
-
-In this task, you will create Sender and Listener Access Policies on the Event Hub Namespace for this lab, and then copy the Connection Strings for them to be used later.
-
-1. In the Azure Portal, navigate to the **Resource Group** created for this hands-on lab, then navigate to the **Event Hubs Namespace** resource.
-
-    ![The Event Hubs Namespace within the Resource Group is highlighted.](media/resource-group-hands-on-lab-event-hubs.png "The Event Hubs Namespace within the Resource Group is highlighted.")
-
-2. Select **Event Hubs**, then select the **transactions** Event Hub from the list.
-
-    ![The Event Hubs link is highlighted, as well as the transactions event hub in the list of event hubs.](media/event-hubs-list-transactions-event-hub.png "The Event Hubs link is highlighted, as well as the transactions event hub in the list of event hubs")
-
-3. Select it then select **Shared access policies** under Settings in the left-hand menu.
-
-    ![Shared access policies is selected within the left-hand menu.](media/select-shared-access-policies.png 'Select Shared access policies')
-
-4. Select **+ Add** in the top toolbar.
-
-   ![Select the + Add button in the top toolbar.](media/add-shared-access-policy.png 'Add Shared Access Policy')
-
-5. In the **Add SAS Policy** blade, configure the following:
-
-    - **Policy name**: Enter **Sender**.
-    - **Manage**: Unchecked
-    - **Send**: Checked
-    - **Listen**: Unchecked
-
-    ![The Add SAS Plicy is displayed, with the previously mentioned settings entered into the appropriate fields.](media/add-sas-policy-sender.png 'Add SAS Policy')
-
-6. Select **Create**.
-
-7. Select **+ Add** in the top toolbar to add another policy.
-
-    ![Select the + Add button in the top toolbar.](media/add-shared-access-policy.png 'Add Shared Access Policy')
-
-8. In the **Add SAS Policy** blade, configure the following:
-
-    - **Policy name**: Enter **Listener**.
-    - **Manage**: Unchecked
-    - **Send**: Unchecked
-    - **Listen**: Checked
-
-    ![The Add SAS Policy is displayed, with the previously mentioned settings entered into the appropriate fields.](media/add-sas-policy-listener.png 'Add SAS Policy')
-
-9. Select **Create**.
-
-10. Select the **Sender** access policy.
-
-11. Copy the **Connection string-primary key** value. Save this value for the Sender policy in Notepad or similar for later.
-
-    ![The button to copy the primary connection string for the sender policy is highlighted.](media/copy-sender-policy-key.png "Sender policy primary connection string")
-
-### Task 2: Configuring Event Hubs and the transaction generator
-
-In this task, you will configure the payment transaction data generator project by completing TODO items in the source code and adding connection information for your Event Hub.
-
-1. Open File Explorer on your machine or VM and navigate to the location you extracted the MCW repo .zip file to (C:\\CosmosMCW\\).
-
-2. Open **TransactionGenerator.sln** in the `Hands-on lab\lab-files\TransactionGenerator` directory. This will open the solution in Visual Studio.
-
-   ![Screenshot of the solution folder with the TransactionGenerator.sln file selected.](media/solution-folder.png 'File Explorer')
-
-   >**Note**: If you are asked to upgrade the solution, which may occur if you are using Visual Studio 2019, select **OK**.
-
-3. Double-click `appsettings.json` in the Solution Explorer to open it. This file contains the settings used by the console app to connect to your Azure services and to configure application behavior settings. The console app is programmed to either use values stored in this file, or within the machine's environment variables. This makes you capable of distributing the executable or containerizing it and passing in environment variables via the command line.
-
-   ![appsettings.json is highlighted in the Visual Studio Solution Explorer.](media/solution-explorer.png 'Solution Explorer')
-
-   The `appsettings.json` file contains the following:
-
-    ```javascript
-    {
-        "EVENT_HUB_1_CONNECTION_STRING": "",
-        "EVENT_HUB_2_CONNECTION_STRING": "",
-        "EVENT_HUB_3_CONNECTION_STRING": "",
-
-        "COSMOS_DB_ENDPOINT": "",
-        "COSMOS_DB_AUTH_KEY": "",
-
-        "SECONDS_TO_LEAD": "0",
-        "SECONDS_TO_RUN": "600",
-        "ONLY_WRITE_TO_COSMOS_DB": "false"
-    }
-    ```
-
-   `SECONDS_TO_LEAD` is the amount of time to wait before sending payment transaction data. Default value is `0`.
-
-   `SECONDS_TO_RUN` is the maximum amount of time to allow the generator to run before stopping transmission of data. The default value is `600`. Data will also stop transmitting after the included `Untagged_Transactions.csv` file's data has been sent.
-
-   If the `ONLY_WRITE_TO_COSMOS_DB` property is set to `true`, no records will be sent to the Event Hubs instances. Default value is `false`.
-
-4. Copy your Event Hub connection string value you copied from the `Sender` policy and saved during the steps you completed in the before the hands-on lab setup guide. Paste this value into the double-quotes located next to `EVENT_HUB_1_CONNECTION_STRING`.
-
-   ![The Event Hub connection string is pasted in appsettings.json.](media/event-hub-connection-string.png 'appsettings.json')
-
-5. Save the file.
-
-6. Open `Program.cs` in the Visual Studio Solution Explorer.
-
-7. In Visual Studio, select **View**, then **Task List** from the dropdown menu.
-
-   ![In Visual Studio, select View then Task List.](media/select-task-list.png 'Select task list')
-
-   This will display the TODO items within the code comments as a list of tasks you can double-click to jump to its location.
-
-   ![Screenshot of the task list.](media/task-list.png 'Visual Studio Task List')
-
-8. Go to **TODO 1** located in `Program.cs` by double-clicking the item in the Task List. Paste the following code under TODO 1, which uses the Event Hub client to send the event data, setting the partition key to `IpCountryCode`:
-
-    ```csharp
-    await eventHubClient.SendAsync(eventData: eventData,
-        partitionKey: transaction.IpCountryCode).ConfigureAwait(false);
-    ```
-
-   Your completed code should look like the following:
-
-   ![Screenshot of completed TODO 1 code.](media/completed-todo-1-code.png 'Completed code')
-
-   >**Note**: The /ipCountryCode partition was selected because the data will most likely include this value, and it allows us to partition by location from which the transaction originated. This field also contains a wide range of values, which is preferable for partitions.
-
-9. Paste the code below under **TODO 2** to increment the count of the number of Event Hub requests that succeeded:
-
-    ```csharp
-    _eventHubRequestsSucceededInBatch++;
-    ```
-
-10. Paste the code below under **TODO 3** to instantiate a new Event Hub client and add it to the `eventHubClients` collection:
-
-    ```csharp
-    EventHubClient.CreateFromConnectionString(
-        arguments.EventHubConnectionString
-    ),
-    ```
-
-11. Save your changes.
-
-### Task 3: Ingesting streaming data into Cosmos DB
+### Task 1: Ingesting streaming data into Cosmos DB
 
 In this task, you will configure Cosmos DB's time-to-live (TTL) settings to On with no default. This will allow the data generator to expire, or delete, the ingested messages after any desired period of time by setting the TTL value (object property of `ttl`) on individual messages as they are sent.
 
-Next you will pass in the Azure Cosmos DB URI and Key values to the data generator so it can connect to and send events to your collection.
+Next, you will configure the payment transaction data generator project by completing TODO items in the source code and adding the Azure Cosmos DB URI and Key connection values to the data generator so it can connect to and send events to your collection.
 
-1. Navigate to your Azure Cosmos DB account in the Azure portal, then select **Data Explorer (2)** on the **Overview (1)** page.
+1. Navigate to your new resource group for this lab in the Azure portal, then select the deployed **Azure Cosmos DB account**.
 
-   ![Data Explorer is highlighted on the Overview page for Cosmos DB.](media/cosmos-db-data-explorer-link.png 'Select Data Explorer')
+    ![The account is selected in the Azure resource group.](media/azure-cosmos-db-account.png "Azure Cosmos DB account")
 
-2. Expand your **Woodgrove (1)** database and your **transactions (2)** container, then select **Scale & Settings (3)**.
+2. Select **Data Explorer (2)** on the **Overview (1)** page.
 
-3. Under **Settings (4)** within the Scale & Settings blade, select the **On (no default)** option for Time to Live. This setting is required to allow documents added to the container to be configured with their own TTL values.
+    ![Data Explorer is highlighted on the Overview page for Cosmos DB.](media/cosmos-db-data-explorer-link.png 'Select Data Explorer')
 
-   ![The Settings blade is shown with the On (no default) Time to Live option selected.](media/cosmos-db-ttl-settings.png 'Settings blade')
+3. Expand your **Woodgrove (1)** database and your **transactions (2)** container, then select **Scale & Settings (3)**.
 
-4. Select **Save** to apply your settings.
+4. Under **Settings (4)** within the Scale & Settings blade, select the **On (no default)** option for Time to Live. This setting is required to allow documents added to the container to be configured with their own TTL values.
 
-5. On the **Azure Cosmos DB Account** blade, select **Keys** under **Settings**.
+    ![The Settings blade is shown with the On (no default) Time to Live option selected.](media/cosmos-db-ttl-settings.png 'Settings blade')
+
+5. Select **Save** to apply your settings.
+
+6. On the **Azure Cosmos DB Account** blade, select **Keys** under **Settings**.
 
     ![The Keys option under Settings for the Cosmos DB Account is highlighted.](media/cosmos-db-settings-keys.png "The Keys option under Settings for the Cosmos DB Account is highlighted.")
 
-6. Copy the endpoint **URI** and **Primary Key** for Cosmos DB. Save this value to notepad or similar for use later.
+7. Copy the endpoint **URI** and **Primary Key** for Cosmos DB. Save this value to notepad or similar for use later.
 
     ![The URI and Primary Key for Cosmos DB are highlighted.](media/cosmos-db-settings-keys-uri-primary-key.png "The URI and Primary Key for Cosmos DB are highlighted.")
 
-7. Open Visual Studio to go back to the TransactionGenerator project.
+8. Open File Explorer on your machine or VM and navigate to the location you extracted the MCW repo .zip file to (C:\\CosmosMCW\\).
 
-8. Open the `appsettings.json` file once more. Paste your Cosmos DB endpoint value next to `COSMOS_DB_ENDPOINT`, and the Cosmos DB authorization key next to `COSMOS_DB_AUTH_KEY`. For example:
+9. Open **TransactionGenerator.sln** in the `Hands-on lab\lab-files\TransactionGenerator` directory. This will open the solution in Visual Studio.
 
-   ![The Cosmos DB values have been added to appsettings.json](media/cosmos-db-values.png 'appsettings.json')
+    ![Screenshot of the solution folder with the TransactionGenerator.sln file selected.](media/solution-folder.png 'File Explorer')
 
-9. Open `Program.cs` and paste the code below under **TODO 4** to send the generated transaction data to Cosmos DB and store the returned `ResourceResponse` object into a new variable for statistics about RU/s used:
+    > **Note**: If you are asked to upgrade the solution, which may occur if you are using Visual Studio 2019, select **OK**.
+
+10. Double-click `appsettings.json` in the Solution Explorer to open it. This file contains the settings used by the console app to connect to your Azure services and to configure application behavior settings. The console app is programmed to either use values stored in this file, or within the machine's environment variables. This makes you capable of distributing the executable or containerizing it and passing in environment variables via the command line.
+
+    ![appsettings.json is highlighted in the Visual Studio Solution Explorer.](media/solution-explorer.png 'Solution Explorer')
+
+    The `appsettings.json` file contains the following:
+
+        ```javascript
+        {
+            "EVENT_HUB_1_CONNECTION_STRING": "",
+            "EVENT_HUB_2_CONNECTION_STRING": "",
+            "EVENT_HUB_3_CONNECTION_STRING": "",
+
+            "COSMOS_DB_ENDPOINT": "",
+            "COSMOS_DB_AUTH_KEY": "",
+
+            "SECONDS_TO_LEAD": "0",
+            "SECONDS_TO_RUN": "600",
+            "ONLY_WRITE_TO_COSMOS_DB": "true"
+        }
+        ```
+
+    `SECONDS_TO_LEAD` is the amount of time to wait before sending payment transaction data. Default value is `0`.
+
+    `SECONDS_TO_RUN` is the maximum amount of time to allow the generator to run before stopping transmission of data. The default value is `600`. Data will also stop transmitting after the included `Untagged_Transactions.csv` file's data has been sent.
+
+    If the `ONLY_WRITE_TO_COSMOS_DB` property is set to `true`, no records will be sent to the Event Hubs instances. Default value is `true`.
+
+11. Paste your Cosmos DB endpoint value next to `COSMOS_DB_ENDPOINT`, and the Cosmos DB authorization key next to `COSMOS_DB_AUTH_KEY`. For example:
+
+    ![The Cosmos DB values have been added to appsettings.json](media/cosmos-db-values.png 'appsettings.json')
+
+12. Save the file.
+
+13. In Visual Studio, select **View**, then **Task List** from the dropdown menu.
+
+    ![In Visual Studio, select View then Task List.](media/select-task-list.png 'Select task list')
+
+    This will display the TODO items within the code comments as a list of tasks you can double-click to jump to its location.
+
+    ![Screenshot of the task list.](media/task-list.png 'Visual Studio Task List')
+
+14. Open `Program.cs` and paste the code below under **TODO 1** to send the generated transaction data to Cosmos DB and store the returned `ResourceResponse` object into a new variable for statistics about RU/s used:
 
     ```csharp
-    var response = await _cosmosDbClient.CreateDocumentAsync(collectionUri, transaction)
-        .ConfigureAwait(false);
+    var response = await container.CreateItemAsync(transaction, cancellationToken: ct);
     ```
 
-10. Paste the code below under **TODO 5** to append the number of RU/s consumed to the `_cosmosRUsPerBatch` variable:
+    Your code should look like the following:
+
+    ![The new code has been added beneath the TODO 1 comment.](media/todo-1-completed.png "TODO 1 completed")
+
+15. Paste the code below under **TODO 2** to append the number of RU/s consumed to the `_cosmosRUsPerBatch` variable:
 
     ```csharp
     _cosmosRUsPerBatch += response.RequestCharge;
     ```
 
-11. Paste the code below under **TODO 6** to set the Cosmos DB connection policy:
+16. Paste the code below under **TODO 3** to set the Cosmos DB connection policy:
 
     ```csharp
-    var connectionPolicy = new ConnectionPolicy
+    var clientOptions = new CosmosClientOptions
     {
-        ConnectionMode = ConnectionMode.Direct,
-        ConnectionProtocol = Protocol.Tcp
+        ConnectionMode = ConnectionMode.Direct
     };
     ```
 
-12. Save your changes.
+17. Save your changes.
 
-13. Run the console app by selecting **Debug**, then **Start Debugging** in the top menu in Visual Studio, or press _F-5_ on your keyboard.
+18. Run the console app by selecting **Debug**, then **Start Debugging** in the top menu in Visual Studio, or press _F-5_ on your keyboard.
 
     ![Screenshot showing the Debug menu expanded in Visual Studio with the Start Debugging menu option highlighted.](media/debug-in-vs.png 'Debug')
 
-14. The PaymentGenerator console window will open, and you should see it start to send data after a few seconds. You may close the window or press `Ctrl+C` or `Ctrl+Break` at any time to stop sending data to Event Hubs and Cosmos DB.
+19. The PaymentGenerator console window will open, and you should see it start to send data after a few seconds. You may close the window or press `Ctrl+C` or `Ctrl+Break` at any time to stop sending data to Cosmos DB.
 
-    ![Screenshot of the PaymentGenerator console window running.](media/payment-generator-console.png 'Payment Generator console window')
+    ![Screenshot of the PaymentGenerator console window running.](media/payment-generator-console-cosmos.png 'Payment Generator console window')
 
-    The top of the output displays information about the Cosmos DB container you created (transactions), the requested RU/s as well as estimated hourly and monthly cost. After every 1,000 records are requested to be sent, you will see output statistics so you can compare Event Hubs to Cosmos DB. Be on the lookout for the following:
+    The top of the output displays information about the Cosmos DB container you created (transactions), the requested RU/s as well as estimated hourly and monthly cost. After every 1,000 records are requested to be sent, you will see output statistics of the written data. Be on the lookout for the following:
 
-    - Compare Event Hub to Cosmos DB statistics. They should have similar processing times and successful calls.
     - Inserted line shows successful inserts in this batch and throughput for writes/second with RU/s usage and estimated monthly ingestion rate added to Cosmos DB statistics.
-    - Processing time: Shows whether the processing time for the past 1,000 requested inserts is faster or slower than the other service.
     - Total elapsed time: Running total of time taken to process all documents.
-    - If this value continues to grow higher for Cosmos DB vs. Event Hubs, that is a good indicator that the Cosmos DB requests are being throttled. Consider increasing the RU/s for the container.
     - Succeeded shows number of accumulative successful inserts to the service.
     - Pending are items in the bulkhead queue. This amount will continue to grow if the service is unable to keep up with demand.
     - Accumulative failed requests that encountered an exception.
 
     > The obvious and recommended method for sending a lot of data is to do so in batches. This method can multiply the amount of data sent with each request by hundreds or thousands. However, the point of our exercise is not to maximize throughput and send as much data as possible, but to compare the relative performance between Event Hubs and Cosmos DB.
 
-15. Note that the current container is set to Autoscale based on load. If you set the scale the number of requested RU/s for your Cosmos DB container manually down to a 700, you should see slower transfer rates increasingly to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 4,000 or to AutoScale.
-
-### Task 4: Choosing between Cosmos DB and Event Hubs for ingestion
-
-Woodgrove Bank has a number of requirements around ingesting payment data, including data retention of the hot data and geographic locations to which the data is replicated for high availability and global distribution of the data for processing. There are many similarities between Event Hubs and Cosmos DB that allow both to work well for data ingestion. However, these services have some significant differences in their overall feature set that you need to evaluate to choose the best option for this customer situation.
-
-In this exercise, you will use the data generator to send data to both Event Hubs and Cosmos DB and compare the performance of the two. You will also configure the generator and the services to set message retention and to send data to various global regions.
-
-1. Open Visual Studio and paste the code below under **TODO 7** (located within `Transaction.cs`) to set the time to live (TTL) value to 60 days (in seconds):
-
-   ```csharp
-   tx.TimeToLive = 60 * 60 * 24 * 60;
-   ```
-
-   This configures Cosmos DB to automatically delete the ingested messages after 60 days by setting the TTL value (`ttl` property) on individual messages as they are sent. This optimization helps save in storage costs while meeting Woodgrove Bank's requirement to keep the streaming data available for that amount of time so they can reprocess in Azure Synapse Analytics, or query the raw data within the collection as needed.
-
-   > Setting the TTL for documents saved to Cosmos DB individually for any length of time desired (even beyond 7 days) is an advantage Cosmos DB has over Event Hubs when used for ingesting streaming data.
-
-2. Save your changes.
-
-3. Navigate to your Event Hubs namespace for this lab in the Azure portal. Select **Event Hubs** from the left-hand menu.
-
-   ![Event Hubs is selected within the left-hand menu](media/select-event-hubs.png 'Select Event Hubs')
-
-4. Select your **transactions** event hub.
-
-5. Select **Properties** on the left-hand menu.
-
-6. Drag the **Message Retention** slider all the way to the right to set the value to 7. This is as long as you can set message retention for Event Hubs messages using the portal UI. It is possible to contact Microsoft to set the value to as many as 4 weeks. Unfortunately, this does not meet Woodgrove Bank's requirements for retaining this hot data for 60 days.
-
-   ![Screenshot displaying the event hub properties and the Message Retention value being set to 7.](media/event-hub-message-retention.png 'Properties')
-
-7. Select **Save Changes**.
-
-   > Woodgrove Bank wants to write all transaction data simultaneously to three different geographic locations: United States, Great Britain, and East Asia. All data should be able to be read from these locations with as little latency as possible. They require this for redundancy purposes as well as being able to better process the data in those regions.
-
-8. Create two more Event Hubs namespaces and event hubs within to ingest transaction data. In the [Azure portal](https://portal.azure.com), select **+ Create a resource**, enter "event hubs" into the Search the Marketplace box, select **Event Hubs** from the results, and then select **Create**.
-
-   ![Create a resource is highlighted in the left-hand navigation menu of the Azure portal, event hubs is entered into the Search the Marketplace box, and Event Hubs is highlighted in the results.](media/create-resource-event-hubs.png 'Create an Event Hubs namespace')
-
-9. On the Create Namespace blade, enter the following:
-
-   - **Name**: Enter a globally unique name (indicated by a green check mark).
-   - **Pricing tier**: Select Standard.
-   - **Enable Kafka**: Unchecked
-   - **Make this namespace zone redundant**: Unchecked
-   - **Subscription**: Select the subscription you are using for this hands-on lab.
-   - **Resource group**: Choose the hands-on-lab-SUFFIX resource group.
-   - **Location**: Select **UK South**. (If you already selected this for the first Event Hub namespace, select a US region)
-   - **Throughput Units**: Set the slider all the way to the left, setting the value to 1.
-   - **Enable Auto-Inflate**: Unchecked
-
-   ![The Create Namespace blade is displayed, with the previously mentioned settings entered into the appropriate fields.](media/create-event-hubs-blade-uk.png 'Create Namespace')
-
-   >**Note**: You may only see some of these settings if you navigate to the **Features** tab in the **Create Namespace** page.
-
-10. Select **Create**.
-
-11. Navigate to the newly provisioned Event Hubs namespace in the Azure portal, then select **Event Hubs** under Entities on the left-hand menu.
-
-    ![Event Hubs is selected within the left-hand menu.](media/select-event-hubs.png 'Select Event Hubs')
-
-12. Select **+ Event Hub** in the top toolbar.
-
-    ![Select the + Event Hub button in the top toolbar.](media/add-event-hub-button.png 'Add Event Hub')
-
-13. In the **Create Event Hub** blade, configure the following:
-
-    - **Name**: Enter **transactions**.
-    - **Partition Count**: Move the slider to set the value to 10.
-    - **Message Retention**: Set to 7.
-    - **Capture**: Off
-
-    ![The Create Event Hub blade is displayed, with the previously mentioned settings entered into the appropriate fields.](media/create-event-hub-blade-7-day-retention.png 'Create Event Hub')
-
-14. Select **Create**.
-
-15. After the new Event Hub is created, select it then select **Shared access policies** under Settings in the left-hand menu.
-
-    ![Shared access policies is selected within the left-hand menu.](media/select-shared-access-policies.png 'Select Shared access policies')
-
-16. Select **+ Add** in the top toolbar.
-
-    ![Select the + Add button in the top toolbar.](media/add-shared-access-policy.png 'Add Shared Access Policy')
-
-17. In the **Add SAS Policy** blade, configure the following:
-
-    - **Policy name**: Enter **Sender**.
-    - **Manage**: Unchecked
-    - **Send**: Checked
-    - **Listen**: Unchecked
-
-    ![The Add SAS Policy is displayed, with the previously mentioned settings entered into the appropriate fields.](media/add-sas-policy-sender.png 'Add SAS Policy')
-
-18. Select **Create**.
-
-19. Select **+ Add** in the top toolbar to add another policy.
-
-    ![Select the + Add button in the top toolbar.](media/add-shared-access-policy.png 'Add Shared Access Policy')
-
-20. In the **Add SAS Policy** blade, configure the following:
-
-    - **Policy name**: Enter **Listener**.
-    - **Manage**: Unchecked
-    - **Send**: Unchecked
-    - **Listen**: Checked
-
-    ![The Add SAS Policy is displayed, with the previously mentioned settings entered into the appropriate fields.](media/add-sas-policy-listener.png 'Add SAS Policy')
-
-21. Select **Create**.
-
-22. Select the **Sender** access policy.
-
-23. Copy the **Connection string-primary key** value. Save this value for the Sender policy in Notepad or similar for later.
-
-24. **Repeat steps 8 through 23 above** to create a new Event Hub namespace in the **East Asia** region.
-
-    ![Create Event Hubs Namespace blade with the East Asia Location selection highlighted.](media/create-event-hubs-blade-asia.png 'Create Namespace')
-
-25. Open Visual Studio to go back to the TransactionGenerator project.
-
-26. Open the `appsettings.json` file once more. Paste your two new Event Hub connection strings into the values for `EVENT_HUB_2_CONNECTION_STRING` and `EVENT_HUB_3_CONNECTION_STRING`, respectively.
-
-    ![The two new Event Hub connection strings are pasted into the appsettings.json file.](media/event-hub-connection-strings.png 'appsettings.json')
-
-27. Save your changes.
-
-28. Open `Program.cs` and paste the below code underneath **TODO 8** to add two new Event Hub clients to the `eventHubClients` collection, using the two new connection string values:
-
-    ```csharp
-    EventHubClient.CreateFromConnectionString(
-        arguments.EventHub2ConnectionString
-    ),
-    EventHubClient.CreateFromConnectionString(
-        arguments.EventHub3ConnectionString
-    )
-    ```
-
-    ![Screenshot displaying completed code.](media/event-hub-clients-added.png 'Program.cs')
-
-29. Now, we will add the two additional regions to Cosmos DB. Navigate to the Azure portal and select your Cosmos DB account you created for this lab.
-
-30. Select **Replicate data globally** underneath Settings in the left-hand menu.
-
-    ![Left-hand menu with the Replicate data globally link highlighted.](media/replicate-data-globally-link.png 'Replicate data globally link')
-
-31. Within the Replicate data globally blade, select **+ Add region** above the listed regions in the Configure regions section.
-
-    ![Screenshot with the Add region link highlighted.](media/add-region-link.png 'Add region link')
-
-    > Notice that there are already two regions and they each have both reads and writes enabled. This is because you enabled the geo-redundancy and multi-region writes options when you provisioned Cosmos DB.
-
-32. Select **East Asia** in the dropdown list, then select **OK** to add the region.
-
-    ![East Asia is selected and highlighted in the location dropdown list.](media/add-region-east-asia.png 'East Asia')
-
-33. Select **+ Add region** again, this time selecting **UK South** in the dropdown list. Select **OK** to add the new region.
-
-    ![UK South is selected and highlighted in the location dropdown list.](media/add-region-uk-south.png 'UK South')
-
-34. Notice that the two new regions are highlighted on the world map, and each have both reads and writes enabled. Congratulations! You completed all the steps to write to and read from multiple regions around the world with Cosmos DB! Finally, select **Discard** to discard your changes.
-
-    ![Map showing newly added regions for Cosmos DB.](media/replicate-data-globally-map.png 'Cosmos DB region map')
-
-    > **Note**: We **do not** need to add the two new regions to complete this lab. However, if you do decide to save the changes, you may have to wait several minutes for the change to take effect. In the meantime, you can feel free to continue and run the transaction generator. Cosmos DB can still ingest data as regions are being added. There should be no performance impact during this time or after the provisioning is complete.
-
-35. Open Visual Studio and debug the TransactionGenerator project. Let it run for at least 2 minutes, or long enough to send 10,000 messages.
-
-    ![The TransactionGenerator console shows event hubs overall running slower than Cosmos DB.](media/console-output-event-hubs-slower.png 'Console output')
-
-    Results will vary depending on machine specifications and network speeds, but overall, it will likely take longer to send the data to the three Event Hub instances than to Azure Cosmos DB. You may also notice the Event Hubs pending queue filling up quite a bit more. Also notice that you did not have to make any code changes to write to the additional Cosmos DB regions.
-
-36. Open each of the three Event Hubs namespaces you have created for this lab. You should see an equal number of messages that were sent to each. The graph is shown on the bottom of the Overview blade. Select the **Messages** metric above the graph to view the number of messages received. The screenshot below is of the UK South Event Hub:
-
-    ![The Messages metric is selected for the UK South Event Hubs namespace.](media/uk-south-metrics.png 'Event Hubs Overview blade')
-
-37. View the data that was saved to Azure Cosmos DB. Navigate to the Azure Cosmos DB account for this lab in the Azure portal. Select **Data Explorer** on the left-hand menu. Expand the **Woodgrove** database and **transactions** collection, then select **Items**. Select one of the documents from the list to view it. If you selected a more recently added document, notice that it contains a `ttl` value of 5,184,000 seconds, or 60 days. Also, there is a `collectionType` value of "Transaction". This allows consumers to query documents stored within the collection by the type. This is needed because a collection can contain any number of document types within, since it does not enforce any type of schema.
-
-    ![Screenshot shows a document displayed within the Cosmos DB Data Explorer.](media/transactions-container.png 'Cosmos DB Data Explorer')
-
-Given the requirements provided by the customer, Azure Cosmos DB is the best choice for ingesting data for this PoC. Azure Cosmos DB allows for more flexible, and longer, TTL (message retention) than Event Hubs, which is capped at 7 days, or 4 weeks when you contact Microsoft to request the extra capacity. Another option for Event Hubs is to use Event Hubs Capture to simultaneously save ingested data to Blob Storage or Azure Data Lake Store for longer retention and cold storage. However, this will require additional development, including automatic clearing of the data after a period of time. In addition, Woodgrove Bank wanted to be able to easily query and replay the transactional data during the 60-day message retention period, from a database. Setting the TTL on the documents to 60 days keeps them in the Azure Cosmos DB transactional store for 60 days, where they can replay the transactions flowing through the change feed. However, with the addition of the analytical store that is enabled through Synapse Link, all data gets automatically copied to a low-cost Azure storage account in columnar format, giving Woodgrove easy access to all their data, regardless of the transactional store's TTL value, from within Synapse Analytics. Since these queries are executed against the analytical store, they do not use any RU/s allocated to the transaction store.
-
-Finally, the requirement to synchronize/write the ingested data to multiple regions, which could grow at any time, makes Azure Cosmos DB a more favorable choice. As you can see, there are more steps required to send data to additional regions using Event Hubs, since you have to provision new namespaces and Event Hub instances in each region. You would also have to account for all those instances on the consuming side, which we will not cover in this lab for sake of time. The ability to read/write to multiple regions by adding and removing them at will with no code or changes required is a great value that Azure Cosmos DB adds. Plus, the fact that Azure Cosmos DB will be used in this solution for serving batch-processed fraudulent data on a global scale means that Azure Cosmos DB can be used to meet both the data ingest and delivery needs with no additional services, like Event Hubs, required.
+20. Note that the current container is set to Autoscale based on load. If you set the scale the number of requested RU/s for your Cosmos DB container manually down to a 700, you should see slower transfer rates increasingly to Cosmos DB due to throttling. You will also see the pending queue growing at a higher rate. The reason for this is because when the number of writes (remember, writes _typically_ use 5 RU/s vs. just 1 RU/s for reads on 1 KB-sized documents) exceeds the allotted amount of RU/s, Cosmos DB sends a 429 response with a _retry_after_ header value to tell the consumer that it is resource-constrained. The SDK automatically handles this by waiting for the specified amount of time, then retrying. After you are done experimenting, set the RU/s back to 4,000 or to AutoScale.
 
 We will continue the lab using Azure Cosmos DB for data ingestion.
 
@@ -553,7 +283,7 @@ We will be exploring files in the Synapse Analytics workspace's primary ADLS Gen
 
     ![The Synapse workspace within the Resource Group is highlighted.](media/resource-group-hands-on-lab-synapse.png "The Synapse workspace within the Resource Group is highlighted.")
 
-2. In the Synapse Analytics workspace Overview blade, select **Launch Synapse Studio**.
+2. In the Synapse Analytics workspace Overview blade, select **Open** within the **Open Synapse Studio** box.
 
     ![The button is highlighted.](media/launch-synapse-studio.png "Launch Synapse Studio")
 
@@ -603,13 +333,9 @@ In this notebook, you will explore this raw transaction data provided by Woodgro
 
 ### Task 5: Review columns with `null` or unusable values
 
-1. Hover your mouse below Cell 1's output, then select **{} Add code** to create a new code cell.
+1. Select **+ Code** beneath Cell 1's output to create a new code cell.
 
     ![The add code button is highlighted.](media/add-code.png "Add code")
-
-    >**Note**: If you cannot see this, then you may need to navigate back to the top bar to select **+ Cell > Add code cell**.
-    >
-    >   ![Adding a code cell to interact with Spark.](./media/add-code-cell.png "Adding code cell")
 
 2. Paste and execute the following in the new cell to review columns with null values (Tip: you can execute a cell by entering **Ctrl+Enter**):
 
@@ -752,9 +478,9 @@ In this task, you create a new Azure Machine Learning datastore that points to t
 
     ![The Machine Learning resource is selected.](media/azure-ml-select.png "Machine Learning")
 
-3. Select **Launch now**  to open the Azure Machine Learning studio.
+3. Select **Launch studio** to open the Azure Machine Learning studio.
 
-    ![The option to launch Azure Machine Learning Studio is selected.](media/azure-ml-launch.png "Launch now")
+    ![The option to launch Azure Machine Learning Studio is selected.](media/azure-ml-launch.png "Launch studio")
 
 4. In the Azure Machine Learning studio, select the **Datastores** option in the Manage tab. Then, select the **+ New datastore** option.
 
@@ -770,9 +496,10 @@ In this task, you create a new Azure Machine Learning datastore that points to t
    | Subscription ID                | _select the appropriate subscription_              |
    | Storage account                | _select `asadatalake#SUFFIX#`_             |
    | Blob container                 | _select `defaultfs`_                                 |
-   | Allow Azure ML Service...      | _select `No`_                                      |
+   | Save credentials with...       | _select `Yes`_                                      |
    | Authentication type            | _select `Account key`_                             |
    | Account key                    | _enter the account key_                            |
+   | Use workspace managed id...    | _select `No`_                                      |
 
    ![In the New datastore output, form field entries are filled in.](media/azure-ml-new-datastore-1.png "New datastore")
 
@@ -808,7 +535,7 @@ In this task, you will use a notebook to explore the transaction and account dat
 
     ![The new compute button is highlighted.](media/new-compute-button.png "New compute")
 
-6. In the **Create compute instance** section, complete the following and then select **Next**.
+6. In the **Create compute instance** section, complete the following and then select **Next: Advanced Settings**, then select **Create**.
 
     | Field                          | Value                                              |
     | ------------------------------ | ------------------------------------------         |
@@ -923,7 +650,7 @@ To do this you will create a Synapse Analytics pipeline with a copy activity. Sy
 
     ![The Synapse workspace within the Resource Group is highlighted.](media/resource-group-hands-on-lab-synapse.png "The Synapse workspace within the Resource Group is highlighted.")
 
-2. In the Synapse Analytics workspace Overview blade, select **Launch Synapse Studio**.
+2. In the Synapse Analytics workspace Overview blade, select **Open** within the **Open Synapse Studio** box.
 
     ![The Launch Synapse Studio button is highlighted in the overview blade.](media/launch-synapse-studio.png "Launch Synapse Studio")
 
@@ -1012,7 +739,7 @@ To do this you will create a Synapse Analytics pipeline with a copy activity. Sy
 
    ![The Monitor button is highlighted.](media/copy-monitor-button.png "Deployment complete")
 
-10. It will take between 3 and 5 minutes for the pipeline run to complete. You may need to refresh the list a few times to see the status change.
+10. It will take between 4 and 6 minutes for the pipeline run to complete. You may need to refresh the list a few times to see the status change.
 
     ![The pipeline run is displayed.](media/copy-pipeline-monitor.png "Pipeline runs")
 
@@ -1022,7 +749,7 @@ To do this you will create a Synapse Analytics pipeline with a copy activity. Sy
 
 Duration: 45 minutes
 
-When you set up Cosmos DB you enabled both geo-redundancy and multi-region writes, and in Exercise 1 you added more regions to your Cosmos DB instance.
+When you set up Cosmos DB you enabled both geo-redundancy and multi-region writes. In a later exercise, you will add more regions to your Cosmos DB instance.
 
 ![Map showing newly added regions for Cosmos DB.](media/replicate-data-globally-map.png 'Cosmos DB region map')
 
@@ -1048,7 +775,7 @@ Now that we have added an Azure Cosmos DB Linked Service in Synapse Analytics, w
 
     > The initial run of this notebook will take time while the Spark pool starts.
 
-4. Select **{} Add code** underneath Cell 1 to create a new cell. Add the following to the cell and run it to indicate whether the `dfStream` DataFrame is a streaming type:
+4. Select **+ Code** underneath Cell 1 to create a new cell. Add the following to the cell and run it to indicate whether the `dfStream` DataFrame is a streaming type:
 
     ```python
     dfStream.isStreaming
@@ -1084,7 +811,7 @@ Now that we have added an Azure Cosmos DB Linked Service in Synapse Analytics, w
     SELECT COUNT(*) FROM transactions
     ```
 
-    > If the count is `0`, wait a while and execute this cell again. You may need to execute it a couple of times before you start seeing the count increase.
+    > If the count is `0`, wait a couple of minutes and execute this cell again. You may need to execute it a couple of times before you start seeing the count increase.
 
 8. We are done with this notebook. Select **Stop session** on the top-right of the notebook. This will free up serverless Apache Spark pool resources for other notebooks you will run.
 
@@ -1218,7 +945,14 @@ The SQL views require the Azure Cosmos DB account name and account key.
     GO
     ```
 
-4. Replace the SQL query with the following to create a new view that displays the customer account data you imported with the copy pipeline earlier in this lab. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name and **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+4. Replace the SQL query with the following to create a secure server credential to store the Azure Cosmos DB account key. This credential will be used by all of the queries that follow to enable secure connectivity to the account. Replace **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+
+    ```sql
+    CREATE CREDENTIAL WoodgroveCosmosDbCredential
+    WITH IDENTITY = 'SHARED ACCESS SIGNATURE', SECRET = 'YOUR_ACCOUNT_KEY';
+    ```
+
+5. Replace the SQL query with the following to create a new view that displays the customer account data you imported with the copy pipeline earlier in this lab. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name that you copied in Task 1 above.
 
     ```sql
     USE Woodgrove
@@ -1252,9 +986,10 @@ The SQL views require the Azure Cosmos DB account name and account key.
         id
     FROM OPENROWSET
         (
-            'CosmosDB',
-            N'account=YOUR_ACCOUNT_NAME;database=Woodgrove;key=YOUR_ACCOUNT_KEY',
-            metadata
+            PROVIDER = 'CosmosDB',
+            CONNECTION = N'account=YOUR_ACCOUNT_NAME;database=Woodgrove',
+            OBJECT = 'metadata',
+            SERVER_CREDENTIAL = 'WoodgroveCosmosDbCredential'
         )
     WITH (
         accountID varchar(50),
@@ -1330,7 +1065,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     }
     ```
 
-5. Replace the SQL query with the following to create a view for the `SuspiciousAgg` data. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name and **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+6. Replace the SQL query with the following to create a view for the `SuspiciousAgg` data. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name that you copied in Task 1 above.
 
     ```sql
     USE Woodgrove
@@ -1350,9 +1085,10 @@ The SQL views require the Azure Cosmos DB account name and account key.
         ,[PercentSuspicious]
     FROM OPENROWSET
         (
-            'CosmosDB',
-            N'account=YOUR_ACCOUNT_NAME;database=Woodgrove;key=YOUR_ACCOUNT_KEY',
-            suspicious_transactions
+            PROVIDER = 'CosmosDB',
+            CONNECTION = N'account=YOUR_ACCOUNT_NAME;database=Woodgrove',
+            OBJECT = 'suspicious_transactions',
+            SERVER_CREDENTIAL = 'WoodgroveCosmosDbCredential'
         )
     WITH (
         [collectionType] varchar(50)
@@ -1365,7 +1101,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     WHERE collectionType = 'SuspiciousAgg'
     ```
 
-6. Replace the SQL query with the following to create a view for the `SuspiciousTransactions` data. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name and **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+7. Replace the SQL query with the following to create a view for the `SuspiciousTransactions` data. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name that you copied in Task 1 above.
 
     ```sql
     USE Woodgrove
@@ -1386,9 +1122,10 @@ The SQL views require the Azure Cosmos DB account name and account key.
         transactionDateTime, isSuspicious, collectionType
     FROM OPENROWSET
         (
-            'CosmosDB',
-            N'account=YOUR_ACCOUNT_NAME;database=Woodgrove;key=YOUR_ACCOUNT_KEY',
-            suspicious_transactions
+            PROVIDER = 'CosmosDB',
+            CONNECTION = N'account=YOUR_ACCOUNT_NAME;database=Woodgrove',
+            OBJECT = 'suspicious_transactions',
+            SERVER_CREDENTIAL = 'WoodgroveCosmosDbCredential'
         )
     WITH (
         transactionID varchar(50),
@@ -1425,7 +1162,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     WHERE collectionType = 'SuspiciousTransactions'
     ```
 
-7. Replace the SQL query with the following to create a view for the `Transactions` data to access all transactions. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name and **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+8. Replace the SQL query with the following to create a view for the `Transactions` data to access all transactions. In the OPENROWSET statement, replace **`YOUR_ACCOUNT_NAME`** with the Azure Cosmos DB account name that you copied in Task 1 above.
 
     ```sql
     USE Woodgrove
@@ -1446,9 +1183,10 @@ The SQL views require the Azure Cosmos DB account name and account key.
         transactionDateTime, collectionType
     FROM OPENROWSET
         (
-            'CosmosDB',
-            N'account=YOUR_ACCOUNT_NAME;database=Woodgrove;key=YOUR_ACCOUNT_KEY',
-            transactions
+            PROVIDER = 'CosmosDB',
+            CONNECTION = N'account=YOUR_ACCOUNT_NAME;database=Woodgrove',
+            OBJECT = 'transactions',
+            SERVER_CREDENTIAL = 'WoodgroveCosmosDbCredential'
         )
     WITH (
         transactionID varchar(50),
@@ -1484,7 +1222,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     WHERE collectionType = 'Transaction'
     ```
 
-8. Replace the SQL query with the following to create a view that joins the suspicious transactions with user account information. We use an INNER JOIN between the `SuspiciousTransactions` view and the `Accounts` view:
+9. Replace the SQL query with the following to create a view that joins the suspicious transactions with user account information. We use an INNER JOIN between the `SuspiciousTransactions` view and the `Accounts` view:
 
     ```sql
     USE Woodgrove
@@ -1520,7 +1258,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     FROM SuspiciousTransactions t INNER JOIN Accounts a ON t.accountID = a.accountID
     ```
 
-9. Replace the SQL query with the following to create a view that counts the number of suspicious vs. non-suspicious transactions per account (user), referencing the `Transactions` and `SuspiciousTransactions` views you created. Then we select from the new view where `SuspiciousCount > 0`.
+10. Replace the SQL query with the following to create a view that counts the number of suspicious vs. non-suspicious transactions per account (user), referencing the `Transactions` and `SuspiciousTransactions` views you created. Then we select from the new view where `SuspiciousCount > 0`.
 
     ```sql
     USE Woodgrove
@@ -1566,11 +1304,7 @@ Woodgrove also wants to explore the Cosmos DB analytical store with Apache Spark
 
     ![The Notebook button is highlighted.](media/new-notebook.png "Notebook")
 
-3. Make sure that the notebook language is set to **PySpark (Python)**, then select **{} Add code**.
-
-    ![The PySpark language is highlighted.](media/new-notebook-new-cell.png "New notebook")
-
-4. Execute the following in the new cell to populate a new DataFrame from the `metadata` analytical store, identify unwanted columns, and display the results:
+3. Execute the following in the new cell to populate a new DataFrame from the `metadata` analytical store, identify unwanted columns, and display the results:
 
     ```python
     accounts = spark.read\
@@ -1591,7 +1325,7 @@ Woodgrove also wants to explore the Cosmos DB analytical store with Apache Spark
 
     > Remember, when you run a cell for the first time in a notebook, it initially takes a few minutes for the Spark pool session to start.
 
-5. Execute the following in a new cell to populate a new DataFrame from the `suspicious_transactions` analytical store:
+4. Execute the following in a new cell to populate a new DataFrame from the `suspicious_transactions` analytical store:
 
     ```python
     suspicious = spark.read\
@@ -1601,7 +1335,7 @@ Woodgrove also wants to explore the Cosmos DB analytical store with Apache Spark
         .load()
     ```
 
-6. Execute the following in a new cell to filter the `suspicious_transactions` data by documents of type "SuspiciousTransactions", and remove duplicate and unwanted columns:
+5. Execute the following in a new cell to filter the `suspicious_transactions` data by documents of type "SuspiciousTransactions", and remove duplicate and unwanted columns:
 
     ```python
     suspicious_transactions = (suspicious
@@ -1616,13 +1350,13 @@ Woodgrove also wants to explore the Cosmos DB analytical store with Apache Spark
     suspicious_transactions = suspicious_transactions.select(cols)
     ```
 
-7. Execute the following in a new cell to display the suspicious transactions:
+6. Execute the following in a new cell to display the suspicious transactions:
 
     ```python
     display(suspicious_transactions.limit(10))
     ```
 
-8. Execute the following in a new cell to perform an inner join on the `suspicious_transactions` and `accounts` DataFrames on the `accountID` field, then select only the columns we're interested in:
+7. Execute the following in a new cell to perform an inner join on the `suspicious_transactions` and `accounts` DataFrames on the `accountID` field, then select only the columns we're interested in:
 
     ```python
     suspicious_transactions_accounts = suspicious_transactions.join(accounts, on=['accountID'], how='inner')
@@ -1668,9 +1402,9 @@ In this task, you retrieve the SQL service endpoint address used to connect to y
 
     ![The Synapse workspace within the Resource Group is highlighted.](media/resource-group-hands-on-lab-synapse.png "The Synapse workspace within the Resource Group is highlighted.")
 
-2. In the Synapse Analytics workspace Overview blade, copy the **SQL on-demand endpoint** and save it to Notepad or similar text editor.
+2. In the Synapse Analytics workspace Overview blade, copy the **Serverless SQL endpoint** and save it to Notepad or similar text editor.
 
-    ![The on-demand endpoint is highlighted.](media/synapse-serverless-address.png "Overview blade")
+    ![The SQL serverless endpoint is highlighted.](media/synapse-serverless-address.png "Overview blade")
 
 ### Task 2: Create Power BI workspace
 
@@ -1684,7 +1418,7 @@ Later in this exercise, you will add a Power BI Linked Service. When you do this
 
     ![The Workspaces and Create a workspace buttons are highlighted.](media/pbi-create-workspace.png "Create a workspace")
 
-3. Enter **Woodgrove** for the workspace name, then select **Save**.
+3. Enter **Woodgrove** (or some other unique name if it is already used in your organization) for the workspace name, then select **Save**.
 
     ![The form is displayed as described.](media/pbi-create-workspace-form.png "Create a workspace")
 
@@ -1814,7 +1548,29 @@ In this task, you will use the Synapse SQL Serverless service endpoint to connec
 
     ![The visualizations are filtered by the selected account.](media/power-bi-filtered.png "Filtered view")
 
-### Task 4: Publish report and add Power BI Linked Service
+### Task 4: Refresh report
+
+When you connected to the Synapse serverless SQL endpoint for this report, you selected the Import option. The data on the report is a snapshot of the data when you added the tables. In this task, you re-run the transaction generator app and refresh the report.
+
+1. On Page 2 of the report, observe the total `SuspiciousCount` and `NonSuspiciousCount` values on the bottom of the Matrix visualization.
+
+    ![The totals on the bottom of the Matrix visualization are highlighted.](media/power-bi-matrix-totals.png "Matrix totals")
+
+2. Switch back to Visual Studio and run the transaction generator for a few minutes. Make sure that it sends at least a few thousand transactions before closing it.
+
+3. Return to the report in Power BI Desktop, then select the **Refresh** button above the report.
+
+    ![The refresh button is highlighted.](media/power-bi-report-refresh.png "Refresh")
+
+    The refresh dialog will appear, showing the refresh status of each table and view. Wait for the operation to complete.
+
+    ![The refresh dialog is displayed.](media/power-bi-refresh-dialog.png "Refresh dialog")
+
+4. Once again, observe the total `SuspiciousCount` and `NonSuspiciousCount` values on the bottom of the Matrix visualization. The values should be higher than they were before you re-ran the transaction generator and refreshed the report.
+
+    ![The new Matrix totals are highlighted.](media/power-bi-matrix-totals-refreshed.png "Matrix totals")
+
+### Task 5: Publish report and add Power BI Linked Service
 
 So far, the report you created is only available to you. To share the report with others, you need to publish it to the Power BI online service. Once you've published your report, you can make it available within Synapse Studio, along with other reports published to your workspace.
 
@@ -1850,7 +1606,7 @@ In this task, you save and publish your report online, then create a Power BI Li
 
     ![The Power BI linked service form is displayed.](media/linked-service-power-bi-form.png "New linked service (Power BI)")
 
-### Task 5: View the report in Synapse Studio
+### Task 6: View the report in Synapse Studio
 
 1. Navigate to the **Develop** hub.
 
@@ -1865,6 +1621,296 @@ In this task, you save and publish your report online, then create a Power BI Li
     ![The embedded report is displayed.](media/embedded-power-bi-report.png "Embedded Power BI report")
 
     You can view and edit the report with the same functions available to you online. This integrated ability enables you to work with Power BI reports without leaving Synapse Studio.
+
+## Exercise 9 (Optional): Collecting streaming transaction data
+
+Duration: 15 minutes
+
+### Task 1: Retrieve Event Hubs Connection String
+
+In this task, you will create Sender and Listener Access Policies on the Event Hub Namespace for this lab, and then copy the Connection Strings for them to be used later.
+
+1. In the Azure Portal, navigate to the **Resource Group** created for this hands-on lab, then navigate to the **Event Hubs Namespace** resource.
+
+    ![The Event Hubs Namespace within the Resource Group is highlighted.](media/resource-group-hands-on-lab-event-hubs.png "The Event Hubs Namespace within the Resource Group is highlighted.")
+
+2. Select **Event Hubs**, then select the **transactions** Event Hub from the list.
+
+    ![The Event Hubs link is highlighted, as well as the transactions event hub in the list of event hubs.](media/event-hubs-list-transactions-event-hub.png "The Event Hubs link is highlighted, as well as the transactions event hub in the list of event hubs")
+
+3. Select it then select **Shared access policies** under Settings in the left-hand menu.
+
+    ![Shared access policies is selected within the left-hand menu.](media/select-shared-access-policies.png 'Select Shared access policies')
+
+4. Select **+ Add** in the top toolbar.
+
+   ![Select the + Add button in the top toolbar.](media/add-shared-access-policy.png 'Add Shared Access Policy')
+
+5. In the **Add SAS Policy** blade, configure the following:
+
+    - **Policy name**: Enter **Sender**.
+    - **Manage**: Unchecked
+    - **Send**: Checked
+    - **Listen**: Unchecked
+
+    ![The Add SAS Plicy is displayed, with the previously mentioned settings entered into the appropriate fields.](media/add-sas-policy-sender.png 'Add SAS Policy')
+
+6. Select **Create**.
+
+7. Select **+ Add** in the top toolbar to add another policy.
+
+    ![Select the + Add button in the top toolbar.](media/add-shared-access-policy.png 'Add Shared Access Policy')
+
+8. In the **Add SAS Policy** blade, configure the following:
+
+    - **Policy name**: Enter **Listener**.
+    - **Manage**: Unchecked
+    - **Send**: Unchecked
+    - **Listen**: Checked
+
+    ![The Add SAS Policy is displayed, with the previously mentioned settings entered into the appropriate fields.](media/add-sas-policy-listener.png 'Add SAS Policy')
+
+9. Select **Create**.
+
+10. Select the **Sender** access policy.
+
+11. Copy the **Connection string-primary key** value. Save this value for the Sender policy in Notepad or similar for later.
+
+    ![The button to copy the primary connection string for the sender policy is highlighted.](media/copy-sender-policy-key.png "Sender policy primary connection string")
+
+### Task 2: Configuring Event Hubs and the transaction generator
+
+In this task, you will configure the payment transaction data generator project by completing TODO items in the source code and adding connection information for your Event Hub.
+
+1. Open File Explorer on your machine or VM and navigate to the location you extracted the MCW repo .zip file to (C:\\CosmosMCW\\).
+
+2. Open **TransactionGenerator.sln** in the `Hands-on lab\lab-files\TransactionGenerator` directory. This will open the solution in Visual Studio.
+
+3. Double-click `appsettings.json` in the Solution Explorer to open it. This file contains the settings used by the console app to connect to your Azure services and to configure application behavior settings. The console app is programmed to either use values stored in this file, or within the machine's environment variables. This makes you capable of distributing the executable or containerizing it and passing in environment variables via the command line.
+
+   ![appsettings.json is highlighted in the Visual Studio Solution Explorer.](media/solution-explorer.png 'Solution Explorer')
+
+4. Copy your Event Hub connection string value you copied from the `Sender` policy and saved during the steps you completed in the before the hands-on lab setup guide. Paste this value into the double-quotes located next to `EVENT_HUB_1_CONNECTION_STRING`.
+
+   ![The Event Hub connection string is pasted in appsettings.json.](media/event-hub-connection-string.png 'appsettings.json')
+
+5. Save the file.
+
+6. Open `Program.cs` in the Visual Studio Solution Explorer.
+
+7. Go to **TODO 4** located in `Program.cs` by double-clicking the item in the Task List. Paste the following code under TODO 4, which uses the Event Hub client to send the event data, setting the partition key to `IpCountryCode`:
+
+    ```csharp
+    using var eventBatch = await eventHubClient.CreateBatchAsync(new CreateBatchOptions { PartitionKey = transaction.IpCountryCode }, ct);
+    eventBatch.TryAdd(eventData);
+    await eventHubClient.SendAsync(eventBatch, ct);
+    ```
+    
+    > **Note**: The /ipCountryCode partition was selected because the data will most likely include this value, and it allows us to partition by location from which the transaction originated. This field also contains a wide range of values, which is preferable for partitions.
+
+8. Paste the code below under **TODO 5** to increment the count of the number of Event Hub requests that succeeded:
+
+    ```csharp
+    _eventHubRequestsSucceededInBatch++;
+    ```
+
+9. Paste the code below under **TODO 6** to instantiate a new Event Hub client and add it to the `eventHubClients` collection:
+
+    ```csharp
+    new EventHubProducerClient(arguments.EventHubConnectionString),
+    ```
+
+10. Save your changes.
+
+### Task 3: Choosing between Cosmos DB and Event Hubs for ingestion
+
+Woodgrove Bank has a number of requirements around ingesting payment data, including data retention of the hot data and geographic locations to which the data is replicated for high availability and global distribution of the data for processing. There are many similarities between Event Hubs and Cosmos DB that allow both to work well for data ingestion. However, these services have some significant differences in their overall feature set that you need to evaluate to choose the best option for this customer situation.
+
+In this exercise, you will use the data generator to send data to both Event Hubs and Cosmos DB and compare the performance of the two. You will also configure the generator and the services to set message retention and to send data to various global regions.
+
+1. Open Visual Studio and paste the code below under **TODO 7** (located within `Transaction.cs`) to set the time to live (TTL) value to 60 days (in seconds):
+
+   ```csharp
+   tx.TimeToLive = 60 * 60 * 24 * 60;
+   ```
+
+   This configures Cosmos DB to automatically delete the ingested messages after 60 days by setting the TTL value (`ttl` property) on individual messages as they are sent. This optimization helps save in storage costs while meeting Woodgrove Bank's requirement to keep the streaming data available for that amount of time so they can reprocess in Azure Synapse Analytics, or query the raw data within the collection as needed.
+
+   > Setting the TTL for documents saved to Cosmos DB individually for any length of time desired (even beyond 7 days) is an advantage Cosmos DB has over Event Hubs when used for ingesting streaming data.
+
+2. Save your changes.
+
+3. Navigate to your Event Hubs namespace for this lab in the Azure portal. Select **Event Hubs** from the left-hand menu.
+
+   ![Event Hubs is selected within the left-hand menu](media/select-event-hubs.png 'Select Event Hubs')
+
+4. Select your **transactions** event hub.
+
+5. Select **Properties** on the left-hand menu.
+
+6. Drag the **Message Retention** slider all the way to the right to set the value to 7. This is as long as you can set message retention for Event Hubs messages using the portal UI. It is possible to contact Microsoft to set the value to as many as 4 weeks. Unfortunately, this does not meet Woodgrove Bank's requirements for retaining this hot data for 60 days.
+
+   ![Screenshot displaying the event hub properties and the Message Retention value being set to 7.](media/event-hub-message-retention.png 'Properties')
+
+7. Select **Save Changes**.
+
+   > Woodgrove Bank wants to write all transaction data simultaneously to three different geographic locations: United States, Great Britain, and East Asia. All data should be able to be read from these locations with as little latency as possible. They require this for redundancy purposes as well as being able to better process the data in those regions.
+
+8. Create two more Event Hubs namespaces and event hubs within to ingest transaction data. In the [Azure portal](https://portal.azure.com), select **+ Create a resource**, enter "event hubs" into the Search the Marketplace box, select **Event Hubs** from the results, and then select **Create**.
+
+   ![Create a resource is highlighted in the left-hand navigation menu of the Azure portal, event hubs is entered into the Search the Marketplace box, and Event Hubs is highlighted in the results.](media/create-resource-event-hubs.png 'Create an Event Hubs namespace')
+
+9. On the Create Namespace blade, enter the following:
+
+   - **Subscription**: Select the subscription you are using for this hands-on lab.
+   - **Resource group**: Choose the hands-on-lab-SUFFIX resource group.
+   - **Name**: Enter a globally unique name (indicated by a green check mark).
+   - **Location**: Select **UK South**. (If you already selected this for the first Event Hub namespace, select a US region)
+   - **Pricing tier**: Select Standard.
+   - **Enable Kafka**: Unchecked
+   - **Make this namespace zone redundant**: Unchecked
+   - **Throughput Units**: Set the slider all the way to the left, setting the value to 1.
+   - **Enable Auto-Inflate**: Unchecked
+
+   ![The Create Namespace blade is displayed, with the previously mentioned settings entered into the appropriate fields.](media/create-event-hubs-blade-uk.png 'Create Namespace')
+
+   >**Note**: You may only see some of these settings if you navigate to the **Features** tab in the **Create Namespace** page.
+
+10. Select **Review + create**, then select **Create**.
+
+11. Navigate to the newly provisioned Event Hubs namespace in the Azure portal, then select **Event Hubs** under Entities on the left-hand menu.
+
+    ![Event Hubs is selected within the left-hand menu.](media/select-event-hubs.png 'Select Event Hubs')
+
+12. Select **+ Event Hub** in the top toolbar.
+
+    ![Select the + Event Hub button in the top toolbar.](media/add-event-hub-button.png 'Add Event Hub')
+
+13. In the **Create Event Hub** blade, configure the following:
+
+    - **Name**: Enter **transactions**.
+    - **Partition Count**: Move the slider to set the value to 10.
+    - **Message Retention**: Set to 7.
+    - **Capture**: Off
+
+    ![The Create Event Hub blade is displayed, with the previously mentioned settings entered into the appropriate fields.](media/create-event-hub-blade-7-day-retention.png 'Create Event Hub')
+
+14. Select **Create**.
+
+15. After the new Event Hub is created, select it then select **Shared access policies** under Settings in the left-hand menu.
+
+    ![Shared access policies is selected within the left-hand menu.](media/select-shared-access-policies.png 'Select Shared access policies')
+
+16. Select **+ Add** in the top toolbar.
+
+    ![Select the + Add button in the top toolbar.](media/add-shared-access-policy.png 'Add Shared Access Policy')
+
+17. In the **Add SAS Policy** blade, configure the following:
+
+    - **Policy name**: Enter **Sender**.
+    - **Manage**: Unchecked
+    - **Send**: Checked
+    - **Listen**: Unchecked
+
+    ![The Add SAS Policy is displayed, with the previously mentioned settings entered into the appropriate fields.](media/add-sas-policy-sender.png 'Add SAS Policy')
+
+18. Select **Create**.
+
+19. Select **+ Add** in the top toolbar to add another policy.
+
+    ![Select the + Add button in the top toolbar.](media/add-shared-access-policy.png 'Add Shared Access Policy')
+
+20. In the **Add SAS Policy** blade, configure the following:
+
+    - **Policy name**: Enter **Listener**.
+    - **Manage**: Unchecked
+    - **Send**: Unchecked
+    - **Listen**: Checked
+
+    ![The Add SAS Policy is displayed, with the previously mentioned settings entered into the appropriate fields.](media/add-sas-policy-listener.png 'Add SAS Policy')
+
+21. Select **Create**.
+
+22. Select the **Sender** access policy.
+
+23. Copy the **Connection string-primary key** value. Save this value for the Sender policy in Notepad or similar for later.
+
+24. **Repeat steps 8 through 23 above** to create a new Event Hub namespace in the **East Asia** region.
+
+    ![Create Event Hubs Namespace blade with the East Asia Location selection highlighted.](media/create-event-hubs-blade-asia.png 'Create Namespace')
+
+25. Open Visual Studio to go back to the TransactionGenerator project.
+
+26. Open the `appsettings.json` file once more. Paste your two new Event Hub connection strings into the values for `EVENT_HUB_2_CONNECTION_STRING` and `EVENT_HUB_3_CONNECTION_STRING`, respectively.
+
+    ![The two new Event Hub connection strings are pasted into the appsettings.json file.](media/event-hub-connection-strings.png 'appsettings.json')
+
+27. Save your changes.
+
+28. Open `Program.cs` and paste the below code underneath **TODO 8** to add two new Event Hub clients to the `eventHubClients` collection, using the two new connection string values:
+
+    ```csharp
+    new EventHubProducerClient(arguments.EventHub2ConnectionString),
+    new EventHubProducerClient(arguments.EventHub3ConnectionString)
+    ```
+
+    ![Screenshot displaying completed code.](media/event-hub-clients-added.png 'Program.cs')
+
+29. Now, we will add the two additional regions to Cosmos DB. Navigate to the Azure portal and select your Cosmos DB account you created for this lab.
+
+30. Select **Replicate data globally** underneath Settings in the left-hand menu.
+
+    ![Left-hand menu with the Replicate data globally link highlighted.](media/replicate-data-globally-link.png 'Replicate data globally link')
+
+31. Within the Replicate data globally blade, select **+ Add region** above the listed regions in the Configure regions section.
+
+    ![Screenshot with the Add region link highlighted.](media/add-region-link.png 'Add region link')
+
+    > Notice that there are already two regions and they each have both reads and writes enabled. This is because you enabled the geo-redundancy and multi-region writes options when you provisioned Cosmos DB.
+
+32. Select **East Asia** in the dropdown list, then select **OK** to add the region.
+
+    ![East Asia is selected and highlighted in the location dropdown list.](media/add-region-east-asia.png 'East Asia')
+
+33. Select **+ Add region** again, this time selecting **UK South** in the dropdown list. Select **OK** to add the new region.
+
+    ![UK South is selected and highlighted in the location dropdown list.](media/add-region-uk-south.png 'UK South')
+
+34. Notice that the two new regions are highlighted on the world map, and each have both reads and writes enabled. Congratulations! You completed all the steps to write to and read from multiple regions around the world with Cosmos DB! Finally, select **Discard** to discard your changes.
+
+    ![Map showing newly added regions for Cosmos DB.](media/replicate-data-globally-map.png 'Cosmos DB region map')
+
+    > **Note**: We **do not** need to add the two new regions to complete this lab. However, if you do decide to save the changes, you may have to wait several minutes for the change to take effect. In the meantime, you can feel free to continue and run the transaction generator. Cosmos DB can still ingest data as regions are being added. There should be no performance impact during this time or after the provisioning is complete.
+
+35. Open Visual Studio and debug the TransactionGenerator project. Let it run for at least 2 minutes, or long enough to send 10,000 messages.
+
+    ![The TransactionGenerator console shows event hubs overall running slower than Cosmos DB.](media/console-output-event-hubs-slower.png 'Console output')
+
+    Results will vary depending on machine specifications and network speeds, but overall, it will likely take longer to send the data to the three Event Hub instances than to Azure Cosmos DB. You may also notice the Event Hubs pending queue filling up quite a bit more. Also notice that you did not have to make any code changes to write to the additional Cosmos DB regions.
+
+    The top of the output displays information about the Cosmos DB container you created (transactions), the requested RU/s as well as estimated hourly and monthly cost. After every 1,000 records are requested to be sent, you will see output statistics so you can compare Event Hubs to Cosmos DB. Be on the lookout for the following:
+
+    - Compare Event Hub to Cosmos DB statistics. They should have similar processing times and successful calls.
+    - Inserted line shows successful inserts in this batch and throughput for writes/second with RU/s usage and estimated monthly ingestion rate added to Cosmos DB statistics.
+    - Processing time: Shows whether the processing time for the past 1,000 requested inserts is faster or slower than the other service.
+    - Total elapsed time: Running total of time taken to process all documents.
+    - If this value continues to grow higher for Cosmos DB vs. Event Hubs, that is a good indicator that the Cosmos DB requests are being throttled. Consider increasing the RU/s for the container.
+    - Succeeded shows number of accumulative successful inserts to the service.
+    - Pending are items in the bulkhead queue. This amount will continue to grow if the service is unable to keep up with demand.
+    - Accumulative failed requests that encountered an exception.
+
+36. Open each of the three Event Hubs namespaces you have created for this lab. You should see an equal number of messages that were sent to each. The graph is shown on the bottom of the Overview blade. Select the **Messages** metric above the graph to view the number of messages received. The screenshot below is of the UK South Event Hub:
+
+    ![The Messages metric is selected for the UK South Event Hubs namespace.](media/uk-south-metrics.png 'Event Hubs Overview blade')
+
+37. View the data that was saved to Azure Cosmos DB. Navigate to the Azure Cosmos DB account for this lab in the Azure portal. Select **Data Explorer** on the left-hand menu. Expand the **Woodgrove** database and **transactions** collection, then select **Items**. Select one of the documents from the list to view it. If you selected a more recently added document, notice that it contains a `ttl` value of 5,184,000 seconds, or 60 days. Also, there is a `collectionType` value of "Transaction". This allows consumers to query documents stored within the collection by the type. This is needed because a collection can contain any number of document types within, since it does not enforce any type of schema.
+
+    ![Screenshot shows a document displayed within the Cosmos DB Data Explorer.](media/transactions-container.png 'Cosmos DB Data Explorer')
+
+Given the requirements provided by the customer, Azure Cosmos DB is the best choice for ingesting data for this PoC. Azure Cosmos DB allows for more flexible, and longer, TTL (message retention) than Event Hubs, which is capped at 7 days, or 4 weeks when you contact Microsoft to request the extra capacity. Another option for Event Hubs is to use Event Hubs Capture to simultaneously save ingested data to Blob Storage or Azure Data Lake Store for longer retention and cold storage. However, this will require additional development, including automatic clearing of the data after a period of time. In addition, Woodgrove Bank wanted to be able to easily query and replay the transactional data during the 60-day message retention period, from a database. Setting the TTL on the documents to 60 days keeps them in the Azure Cosmos DB transactional store for 60 days, where they can replay the transactions flowing through the change feed. However, with the addition of the analytical store that is enabled through Synapse Link, all data gets automatically copied to a low-cost Azure storage account in columnar format, giving Woodgrove easy access to all their data, regardless of the transactional store's TTL value, from within Synapse Analytics. Since these queries are executed against the analytical store, they do not use any RU/s allocated to the transaction store.
+
+Finally, the requirement to synchronize/write the ingested data to multiple regions, which could grow at any time, makes Azure Cosmos DB a more favorable choice. As you can see, there are more steps required to send data to additional regions using Event Hubs, since you have to provision new namespaces and Event Hub instances in each region. You would also have to account for all those instances on the consuming side, which we will not cover in this lab for sake of time. The ability to read/write to multiple regions by adding and removing them at will with no code or changes required is a great value that Azure Cosmos DB adds. Plus, the fact that Azure Cosmos DB will be used in this solution for serving batch-processed fraudulent data on a global scale means that Azure Cosmos DB can be used to meet both the data ingest and delivery needs with no additional services, like Event Hubs, required.
+
 
 ## After the hands-on lab
 
