@@ -1754,7 +1754,7 @@ In this exercise, you will use the data generator to send data to both Event Hub
 
 7. Select **Save Changes**.
 
-   > Woodgrove Bank wants to write all transaction data simultaneously to three different geographic locations: United States, Great Britain, and East Asia. All data should be able to be read from these locations with as little latency as possible. They require this for redundancy purposes as well as being able to better process the data in those regions.
+   > Woodgrove Bank wants to write all transaction data simultaneously to three different geographic locations: United States, United Kingdom, and East Asia. All data should be able to be read from these locations with as little latency as possible. They require this for redundancy purposes as well as being able to better process the data in those regions.
 
 8. Create two more Event Hubs namespaces and event hubs within to ingest transaction data. In the [Azure portal](https://portal.azure.com), select **+ Create a resource**, enter "event hubs" into the Search the Marketplace box, select **Event Hubs** from the results, and then select **Create**.
 
