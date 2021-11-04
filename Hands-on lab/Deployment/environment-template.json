@@ -16,6 +16,22 @@
             "metadata": {
                 "description": "Maximum throughput when using Autoscale Throughput Policy for the container"
             }
+        },
+        "vmUsername": {
+            "defaultValue": "demouser",
+            "type": "string",
+            "metadata": {
+                "description": "Administrator user name for logging into the Lab Virtual Machine."
+            }
+        },
+        "vmPassword": {
+            "defaultValue": "Password.1!!",
+            "type": "securestring",
+            "minLength": 8,
+            "maxLength": 128,
+            "metadata": {
+                "description": "The password must be between 8 and 128 characters in length and must contain at least one number, one non-alphanumeric character, and one upper or lower case letter. Default value is Password.1!!"
+            }
         }
     },
     "variables": {
@@ -61,7 +77,20 @@
         "sparkVersion": "2.4",
         "blobStorageAccountName": "[concat('asastore', variables('name_suffix'))]",
         "applicationInsightsName": "[concat('asaappinsights', variables('name_suffix'))]",
-        "amlWorkspaceName": "[concat('amlworkspace', variables('name_suffix'))]"
+        "amlWorkspaceName": "[concat('amlworkspace', variables('name_suffix'))]",
+
+        "virtualNetworkName": "[concat(resourceGroup().name, '-vnet')]",
+        "addressPrefix": "176.16.0.0/16",
+        "subnetName": "default",
+        "subnetPrefix": "176.16.0.0/24",
+
+        "vmName": "LabVM",
+        "vmSize": "Standard_D4s_v3",
+        "vmNetworkSecurityGroupName": "[concat(variables('vmName'), '-nsg')]",
+        "vmNetworkInterfaceName": "[concat(variables('vmName'), '-nic')]",
+        "vmPublicIpAddressName": "[concat(variables('vmName'), '-ip')]",
+        "vmCustomScriptFileName": "configure-labvm.ps1",
+        "vmCustomScriptUri": "[concat('https://raw.githubusercontent.com/joelhulen/MCW-Cosmos-DB-Real-Time-Advanced-Analytics/main/Hands-on%20lab/Deployment/environment-template/', variables('vmCustomScriptFileName'))]"
     },
     "resources": [
         {
@@ -559,6 +588,159 @@
             ],
             "properties": {
                 "publicAccess": "None"
+            }
+        },
+        {
+            "name": "[variables('vmName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2020-06-01",
+            "location": "[variables('primary_region')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces/', variables('vmNetworkInterfaceName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                "vmSize": "[variables('vmSize')]"
+                },
+                "storageProfile": {
+                "osDisk": {
+                    "createOption": "FromImage",
+                    "managedDisk": {
+                    "storageAccountType": "Premium_LRS"
+                    }
+                },
+                "imageReference": {
+                    "publisher": "microsoftvisualstudio",
+                    "offer": "visualstudio2019latest",
+                    "sku": "vs-2019-comm-latest-ws2019",
+                    "version": "latest"
+                }
+                },
+                "networkProfile": {
+                "networkInterfaces": [
+                    {
+                    "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('vmNetworkInterfaceName'))]"
+                    }
+                ]
+                },
+                "osProfile": {
+                "computerName": "[variables('vmName')]",
+                "adminUsername": "[parameters('vmUsername')]",
+                "adminPassword": "[parameters('vmPassword')]",
+                "windowsConfiguration": {
+                    "enableAutomaticUpdates": true,
+                    "provisionVmAgent": true
+                }
+                }
+            },
+            "resources": [
+                {
+                "name": "SetupLabVm",
+                "type": "extensions",
+                "apiVersion": "2020-06-01",
+                "location": "[variables('primary_region')]",
+                "properties": {
+                    "publisher": "Microsoft.Compute",
+                    "type": "CustomScriptExtension",
+                    "protectedSettings": {},
+                    "typeHandlerVersion": "1.9",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {
+                    "fileUris": ["[variables('vmCustomScriptUri')]"],
+                    "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('vmCustomScriptFileName'))]"
+                    }
+                },
+                "dependsOn": [
+                    "[resourceId('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+                ],
+                "tags": {
+                    "displayName": "SetupLabVm"
+                }
+                }
+            ]
+            },
+            {
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('virtualNetworkName')]",
+            "apiVersion": "2020-06-01",
+            "location": "[variables('primary_region')]",
+            "properties": {
+                "addressSpace": {
+                "addressPrefixes": ["[variables('addressPrefix')]"]
+                },
+                "subnets": [
+                {
+                    "name": "[variables('subnetName')]",
+                    "properties": {
+                    "addressPrefix": "[variables('subnetPrefix')]"
+                    }
+                }
+                ]
+            }
+            },
+            {
+            "name": "[variables('vmNetworkInterfaceName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-06-01",
+            "location": "[variables('primary_region')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+                "[resourceId('Microsoft.Network/publicIpAddresses/', variables('vmPublicIpAddressName'))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups/', variables('vmNetworkSecurityGroupName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                {
+                    "name": "ipconfig1",
+                    "properties": {
+                    "subnet": {
+                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
+                    },
+                    "privateIPAllocationMethod": "Dynamic",
+                    "publicIpAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIpAddresses', variables('vmPublicIpAddressName'))]"
+                    }
+                    }
+                }
+                ],
+                "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('vmNetworkSecurityGroupName'))]"
+                }
+            }
+            },
+            {
+            "name": "[variables('vmPublicIpAddressName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-06-01",
+            "location": "[variables('primary_region')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            },
+            "sku": {
+                "name": "Basic"
+            }
+            },
+            {
+            "name": "[variables('vmNetworkSecurityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-06-01",
+            "location": "[variables('primary_region')]",
+            "properties": {
+                "securityRules": [
+                {
+                    "name": "RDP",
+                    "properties": {
+                    "priority": 300,
+                    "protocol": "Tcp",
+                    "access": "Allow",
+                    "direction": "Inbound",
+                    "sourceAddressPrefix": "*",
+                    "sourcePortRange": "*",
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "3389"
+                    }
+                }
+                ]
             }
         }
     ]
