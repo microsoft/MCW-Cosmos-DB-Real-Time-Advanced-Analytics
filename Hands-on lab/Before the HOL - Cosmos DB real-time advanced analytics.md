@@ -101,7 +101,7 @@ In this task, you create an Azure resource group to serve as a container for the
 
 1. Deploy the workspace through the following Azure ARM template (press the button below):
 
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2FMCW-Cosmos-DB-Real-Time-Advanced-Analytics%2Fmaster%2FHands-on%20lab%2FDeployment%2Fenvironment-template.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjoelhulen%2FMCW-Cosmos-DB-Real-Time-Advanced-Analytics%2Fmain%2FHands-on%20lab%2FDeployment%2Fenvironment-template.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a>
 
 2. Enter the following values, then select **Review + create**:
 
