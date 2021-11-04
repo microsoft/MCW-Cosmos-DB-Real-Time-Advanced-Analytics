@@ -29,10 +29,10 @@ Microsoft and the trademarks listed at <https://www.microsoft.com/en-us/legal/in
 - [Cosmos DB real-time advanced analytics before the hands-on lab setup guide](#cosmos-db-real-time-advanced-analytics-before-the-hands-on-lab-setup-guide)
   - [Requirements](#requirements)
   - [Before the hands-on lab](#before-the-hands-on-lab)
-    - [Task 1: Download and install Power BI Desktop](#task-1-download-and-install-power-bi-desktop)
-    - [Task 2: Provision a resource group](#task-2-provision-a-resource-group)
-    - [Task 3: Deploy Environment](#task-3-deploy-environment)
-    - [Task 4: Set the default web browser to Microsoft Edge on the Lab VM](#task-4-set-the-default-web-browser-to-microsoft-edge-on-the-lab-vm)
+    - [Task 1: Provision a resource group](#task-1-provision-a-resource-group)
+    - [Task 2: Deploy Environment](#task-2-deploy-environment)
+    - [Task 3: Set the default web browser to Microsoft Edge on the Lab VM](#task-3-set-the-default-web-browser-to-microsoft-edge-on-the-lab-vm)
+    - [Task 4: Download and install Power BI Desktop](#task-4-download-and-install-power-bi-desktop)
 
 <!-- /TOC -->
 
@@ -51,13 +51,7 @@ In the Before the hands-on lab exercise, you will set up your environment for us
 
 > **Important**: Most Azure resources require unique names. Throughout this lab you will see the word “SUFFIX” as part of resource names. You should replace this with your Microsoft alias, initials, or another value to ensure the resource is uniquely named.
 
-### Task 1: Download and install Power BI Desktop
-
-Power BI desktop is required to make a connection to your Azure Databricks environment when creating the Power BI dashboard.
-
-1. Download and install [Power BI Desktop](https://powerbi.microsoft.com/desktop/).
-
-### Task 2: Provision a resource group
+### Task 1: Provision a resource group
 
 In this task, you will create an Azure resource group for the resources used throughout this lab.
 
@@ -83,7 +77,7 @@ In this task, you create an Azure resource group to serve as a container for the
 
 5. On the **Review + create** tab, ensure the Validation passed message is displayed and then select **Create**.
 
-### Task 3: Deploy Environment
+### Task 2: Deploy Environment
 
 1. Deploy the workspace through the following Azure ARM template (press the button below):
 
@@ -107,7 +101,7 @@ In this task, you create an Azure resource group to serve as a container for the
 
     ![The deployment progress is shown.](media/deploy-deployment-progress.png 'The deployment progress is shown')
 
-### Task 4: Set the default web browser to Microsoft Edge on the Lab VM
+### Task 3: Set the default web browser to Microsoft Edge on the Lab VM
 
 In this task, you create an RDP connection to your Lab virtual machine (VM) and change the default web browser to Microsoft Edge. This will ensure Microsoft Edge is used when launching a web browser from Visual Studio and prevent the functionality issues encountered if using Internet Explorer.
 
@@ -160,6 +154,10 @@ In this task, you create an RDP connection to your Lab virtual machine (VM) and 
 
 12. Close the **Default apps** dialog.
 
-You should follow all steps provided *before* performing the Hands-on lab.
+### Task 4: Download and install Power BI Desktop
+
+Power BI desktop is required to make a connection to your Azure Synapse Analytics environment when creating the Power BI dashboard.
+
+1. Download and install [Power BI Desktop](https://powerbi.microsoft.com/desktop/) on your VM.
 
 You should follow all steps provided _before_ performing the Hands-on lab.
