@@ -32,7 +32,8 @@ Microsoft and the trademarks listed at <https://www.microsoft.com/en-us/legal/in
   - [Solution architecture](#solution-architecture)
   - [Requirements](#requirements)
   - [Exercise 1: Collecting streaming transaction data](#exercise-1-collecting-streaming-transaction-data)
-    - [Task 1: Ingesting streaming data into Cosmos DB](#task-1-ingesting-streaming-data-into-cosmos-db)
+    - [Task 1: Connect to the Lab VM](#task-1-connect-to-the-lab-vm)
+    - [Task 2: Ingesting streaming data into Cosmos DB](#task-2-ingesting-streaming-data-into-cosmos-db)
   - [Exercise 2: Understanding and preparing the transaction data](#exercise-2-understanding-and-preparing-the-transaction-data)
     - [Task 1: Configure access to the storage account from your workspace](#task-1-configure-access-to-the-storage-account-from-your-workspace)
     - [Task 2: Open Synapse Studio](#task-2-open-synapse-studio)
@@ -110,8 +111,15 @@ Finally, Azure Key Vault is used to securely store secrets, such as account keys
 
 ## Requirements
 
-1. Microsoft Azure subscription (non-Microsoft subscription, must be a pay-as-you-go subscription).
-2. Power BI pro license (optional)
+- Microsoft Azure subscription (non-Microsoft subscription, must be a pay-as-you-go subscription).
+- Power BI pro license (optional)
+- Local machine or a virtual machine configured with (**complete the day before the lab!**):
+  - Visual Studio Community 2019 or greater.
+    - <https://www.visualstudio.com/vs/>
+  - Azure development workload for Visual Studio.
+    - <https://docs.microsoft.com/azure/azure-functions/functions-develop-vs#prerequisites>
+  - .NET 5.0 or greater.
+    - <https://www.microsoft.com/net/download/windows>
 
 ## Exercise 1: Collecting streaming transaction data
 
@@ -119,7 +127,46 @@ Duration: 30 minutes
 
 In this exercise, you will configure a payment transaction generator to write real-time streaming online payments to both Event Hubs and Azure Cosmos DB.
 
-### Task 1: Ingesting streaming data into Cosmos DB
+### Task 1: Connect to the Lab VM
+
+In this task, you create an RDP connection to your Lab virtual machine (VM).
+
+1. In the [Azure portal](https://portal.azure.com), select **Resource groups** from the Azure services list.
+
+   ![Resource groups is highlighted in the Azure services list.](media/azure-services-resource-groups.png "Azure services")
+
+2. Select the **hands-on-lab-SUFFIX** resource group from the list.
+
+   ![The "hands-on-lab-SUFFIX" resource group is highlighted.](./media/resource-groups.png "Resource groups list")
+
+3. In the list of resources within your resource group, select the **LabVM Virtual machine** resource.
+
+   ![The list of resources in the hands-on-lab-SUFFIX resource group are displayed, and LabVM is highlighted.](./media/resource-group-resources-labvm.png "LabVM in resource group list")
+
+4. On your LabVM blade, select **Connect** and **RDP** from the top menu.
+
+   ![The LabVM blade is displayed, with the Connect button highlighted in the top menu.](./media/connect-vm-rdp.png "Connect to Lab VM")
+
+5. On the Connect to virtual machine blade, select **Download RDP File**, then open the downloaded RDP file.
+
+   ![The Connect to virtual machine blade is displayed, and the Download RDP File button is highlighted.](./media/connect-to-virtual-machine.png "Connect to virtual machine")
+
+6. Select **Connect** on the Remote Desktop Connection dialog.
+
+   ![In the Remote Desktop Connection Dialog Box, the Connect button is highlighted.](./media/remote-desktop-connection.png "Remote Desktop Connection dialog")
+
+7. Enter the following credentials when prompted, and then select **OK**:
+
+   - **User name**: demouser
+   - **Password**: Password.1!!
+
+   ![The credentials specified above are entered into the Enter your credentials dialog.](media/rdc-credentials.png "Enter your credentials")
+
+8. Select **Yes** to connect if prompted that the remote computer's identity cannot be verified.
+
+   ![In the Remote Desktop Connection dialog box, a warning states that the remote computer's identity cannot be verified and asks if you want to continue anyway. At the bottom, the Yes button is highlighted.](./media/remote-desktop-connection-identity-verification-labvm.png "Remote Desktop Connection dialog")
+
+### Task 2: Ingesting streaming data into Cosmos DB
 
 In this task, you will configure Cosmos DB's time-to-live (TTL) settings to On with no default. This will allow the data generator to expire, or delete, the ingested messages after any desired period of time by setting the TTL value (object property of `ttl`) on individual messages as they are sent.
 
@@ -149,7 +196,7 @@ Next, you will configure the payment transaction data generator project by compl
 
     ![The URI and Primary Key for Cosmos DB are highlighted.](media/cosmos-db-settings-keys-uri-primary-key.png "The URI and Primary Key for Cosmos DB are highlighted.")
 
-8. Open File Explorer on your machine or VM and navigate to the location you extracted the MCW repo .zip file to (C:\\CosmosMCW\\).
+8. Open File Explorer on your LabVM and navigate to `C:\CosmosMCW\`.
 
 9. Open **TransactionGenerator.sln** in the `Hands-on lab\lab-files\TransactionGenerator` directory. This will open the solution in Visual Studio.
 
