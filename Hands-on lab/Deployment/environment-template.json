@@ -90,7 +90,7 @@
         "vmNetworkInterfaceName": "[concat(variables('vmName'), '-nic')]",
         "vmPublicIpAddressName": "[concat(variables('vmName'), '-ip')]",
         "vmCustomScriptFileName": "configure-labvm.ps1",
-        "vmCustomScriptUri": "[concat('https://raw.githubusercontent.com/joelhulen/MCW-Cosmos-DB-Real-Time-Advanced-Analytics/main/Hands-on%20lab/Deployment/environment-template/', variables('vmCustomScriptFileName'))]"
+        "vmCustomScriptUri": "[concat('https://raw.githubusercontent.com/joelhulen/MCW-Cosmos-DB-Real-Time-Advanced-Analytics/main/Hands-on%20lab/Deployment/', variables('vmCustomScriptFileName'))]"
     },
     "resources": [
         {
