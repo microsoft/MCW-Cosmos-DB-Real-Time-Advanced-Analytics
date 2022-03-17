@@ -85,7 +85,7 @@ Woodgrove Bank, who provides payment processing services for commerce, is lookin
 
 In this hands-on lab session, you will implement a PoC of the data pipeline that could support the needs of Woodgrove Bank.
 
-At the end of this workshop, you will be better able to implement solutions that leverage the strengths of Cosmos DB in support of advanced analytics solutions that require high throughput ingest, low latency serving and global scale in combination with scalable machine learning, big data and real-time processing capabilities.
+At the end of this workshop, you will be better able to implement solutions that leverage the strengths of Cosmos DB in support of advanced analytics solutions that require high throughput ingest, low latency serving and global scale in combination with scalable machine learning, big data, and real-time processing capabilities.
 
 ## Overview
 
@@ -286,7 +286,7 @@ Next, you will configure the payment transaction data generator project by compl
 
     - Inserted line shows successful inserts in this batch and throughput for writes/second with RU/s usage and estimated monthly ingestion rate added to Cosmos DB statistics.
     - Total elapsed time: Running total of time taken to process all documents.
-    - Succeeded shows number of accumulative successful inserts to the service.
+    - Succeeded shows the number of accumulative successful inserts to the service.
     - Pending are items in the bulkhead queue. This amount will continue to grow if the service is unable to keep up with demand.
     - Accumulative failed requests that encountered an exception.
 
@@ -342,7 +342,7 @@ We will be exploring files in the Synapse Analytics workspace's primary ADLS Gen
 
 ### Task 3: Upload historical data
 
-Woodgrove Bank provided historical transaction data. We want to explore this data using Synapse Notebooks, and we want to use the data from Azure Machine Learning later on for model training. In this task, you will upload the historical files to the Synapse Analytics primary ADLS Gen2 account.
+Woodgrove Bank provided historical transaction data. We want to explore this data using Synapse Notebooks, and we want to use the data from Azure Machine Learning later for model training. In this task, you will upload the historical files to the Synapse Analytics primary ADLS Gen2 account.
 
 1. Navigate to the **Data** hub.
 
@@ -366,7 +366,7 @@ Woodgrove Bank provided historical transaction data. We want to explore this dat
 
 ### Task 4: Create Synapse Notebook to explore historical data
 
-Data preparation is an important step in the data engineering process. Before using data to create machine learning models, it is important to understand the data, and determine what features of the data set will be valuable for your intended purposes. To assist with this, Woodgrove has provided a CSV file contain some of its historical transactions for exploration.
+Data preparation is an important step in the data engineering process. Before using data to create machine learning models, it is important to understand the data, and determine what features of the data set will be valuable for your intended purposes. To assist with this, Woodgrove has provided a CSV file containing some of its historical transactions for exploration.
 
 In this notebook, you will explore this raw transaction data provided by Woodgrove to gain a better understanding of the types of transformations that need to be performed on the data to prepare it for use in building and training a machine learning model to detect fraud.
 
@@ -374,7 +374,7 @@ In this notebook, you will explore this raw transaction data provided by Woodgro
 
     ![The file is highlighted and the New notebook menu item is selected.](media/untagged-new-notebook.png "New notebook")
 
-2. Update the cell to uncomment the `, header=True` line by removing the two pound symbols at the beginning of the line **(`##`)** **(1)**. Make sure the notebook is attached to **SparkPool01 (2)**, then select **Run all (3)**. It will take a few minutes to run this notebook the first time since the serverless Apache Spark pool needs start.
+2. Update the cell to uncomment the `, header=True` line by removing the two pound symbols at the beginning of the line **(`##`)** **(1)**. Make sure the notebook is attached to **SparkPool01 (2)**, then select **Run all (3)**. It will take a few minutes to run this notebook the first time since the serverless Apache Spark pool needs to start.
 
     ![The notebook is displayed.](media/untagged-transactions-notebook-run.png "Notebook")
 
@@ -451,7 +451,7 @@ Woodgrove has provided you with a list of possible `cvvVerifyResult` values and 
     +---------------+------+
     ```
 
-    There are two interesting things to note for the values in the `cvvVerifyResult` field:
+    There are two interesting things to note about the values in the `cvvVerifyResult` field:
 
     1. We have some rows with empty values, which, according to the values listed provided by Woodgrove, indicates a failed transaction. For our fraud detection model, we are only concerned with completed transactions, so you might consider dropping rows where the `cvvVerifyResult` is empty. The count allows us to have some insight into the impact this will have on the size of our dataset.
 
@@ -945,7 +945,7 @@ In this task, you will execute Synapse Notebooks to perform both near real-time 
 
 6. Execute all the cells in the **Real-time-scoring** notebook.
 
-7. After running all of the cells, **stop the session**.
+7. After running all the cells, **stop the session**.
 
 8. Select the **Batch-scoring-analytical-store** notebook.
 
@@ -973,7 +973,7 @@ In this exercise, you create SQL views to query data in the analytical store usi
 
 The SQL views require the Azure Cosmos DB account name and account key.
 
-1. Navigate to your Azure Cosmos DB account in the Azure portal, then select **Keys** in the left-hand menu **(1)**, then copy the **Primary Key** value **(2)** and save it to Notepad or similar for later reference. Copy the Azure Cosmos DB **account name** in the upper-left corner **(3)** and also save it to Notepad or similar text editor for later.
+1. Navigate to your Azure Cosmos DB account in the Azure portal, then select **Keys** in the left-hand menu **(1)**, then copy the **Primary Key** value **(2)** and save it to Notepad or similar for later reference. Copy the Azure Cosmos DB **account name** in the upper-left corner **(3)** and save it to Notepad or similar a text editor for later.
 
     ![The primary key is highlighted.](media/cosmos-keys.png "Keys")
 
@@ -1002,7 +1002,7 @@ The SQL views require the Azure Cosmos DB account name and account key.
     GO
     ```
 
-4. Replace the SQL query with the following to create a secure server credential to store the Azure Cosmos DB account key. This credential will be used by all of the queries that follow to enable secure connectivity to the account. Replace **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
+4. Replace the SQL query with the following to create a secure server credential to store the Azure Cosmos DB account key. This credential will be used by all the queries that follow to enable secure connectivity to the account. Replace **`YOUR_ACCOUNT_KEY`** with the Azure Cosmos DB Primary Key value you copied in Task 1 above.
 
     ```sql
     CREATE CREDENTIAL WoodgroveCosmosDbCredential
@@ -1952,11 +1952,11 @@ In this exercise, you will use the data generator to send data to both Event Hub
     - Processing time: Shows whether the processing time for the past 1,000 requested inserts is faster or slower than the other service.
     - Total elapsed time: Running total of time taken to process all documents.
     - If this value continues to grow higher for Cosmos DB vs. Event Hubs, that is a good indicator that the Cosmos DB requests are being throttled. Consider increasing the RU/s for the container.
-    - Succeeded shows number of accumulative successful inserts to the service.
+    - Succeeded shows the number of accumulative successful inserts to the service.
     - Pending are items in the bulkhead queue. This amount will continue to grow if the service is unable to keep up with demand.
     - Accumulative failed requests that encountered an exception.
 
-36. Open each of the three Event Hubs namespaces you have created for this lab. You should see an equal number of messages that were sent to each. The graph is shown on the bottom of the Overview blade. Select the **Messages** metric above the graph to view the number of messages received. The screenshot below is of the UK South Event Hub:
+36. Open each of the three Event Hubs namespaces you have created for this lab. You should see an equal number of messages that were sent to each. The graph is shown at the bottom of the Overview blade. Select the **Messages** metric above the graph to view the number of messages received. The screenshot below is of the UK South Event Hub:
 
     ![The Messages metric is selected for the UK South Event Hubs namespace.](media/uk-south-metrics.png 'Event Hubs Overview blade')
 
@@ -1966,7 +1966,7 @@ In this exercise, you will use the data generator to send data to both Event Hub
 
 Given the requirements provided by the customer, Azure Cosmos DB is the best choice for ingesting data for this PoC. Azure Cosmos DB allows for more flexible, and longer, TTL (message retention) than Event Hubs, which is capped at 7 days, or 4 weeks when you contact Microsoft to request the extra capacity. Another option for Event Hubs is to use Event Hubs Capture to simultaneously save ingested data to Blob Storage or Azure Data Lake Store for longer retention and cold storage. However, this will require additional development, including automatic clearing of the data after a period of time. In addition, Woodgrove Bank wanted to be able to easily query and replay the transactional data during the 60-day message retention period, from a database. Setting the TTL on the documents to 60 days keeps them in the Azure Cosmos DB transactional store for 60 days, where they can replay the transactions flowing through the change feed. However, with the addition of the analytical store that is enabled through Synapse Link, all data gets automatically copied to a low-cost Azure storage account in columnar format, giving Woodgrove easy access to all their data, regardless of the transactional store's TTL value, from within Synapse Analytics. Since these queries are executed against the analytical store, they do not use any RU/s allocated to the transaction store.
 
-Finally, the requirement to synchronize/write the ingested data to multiple regions, which could grow at any time, makes Azure Cosmos DB a more favorable choice. As you can see, there are more steps required to send data to additional regions using Event Hubs, since you have to provision new namespaces and Event Hub instances in each region. You would also have to account for all those instances on the consuming side, which we will not cover in this lab for sake of time. The ability to read/write to multiple regions by adding and removing them at will with no code or changes required is a great value that Azure Cosmos DB adds. Plus, the fact that Azure Cosmos DB will be used in this solution for serving batch-processed fraudulent data on a global scale means that Azure Cosmos DB can be used to meet both the data ingest and delivery needs with no additional services, like Event Hubs, required.
+Finally, the requirement to synchronize/write the ingested data to multiple regions, which could grow at any time, makes Azure Cosmos DB a more favorable choice. As you can see, there are more steps required to send data to additional regions using Event Hubs, since you have to provision new namespaces and Event Hub instances in each region. You would also have to account for all those instances on the consuming side, which we will not cover in this lab for the sake of time. The ability to read/write to multiple regions by adding and removing them at will with no code or changes required is a great value that Azure Cosmos DB adds. Plus, the fact that Azure Cosmos DB will be used in this solution for serving batch-processed fraudulent data on a global scale means that Azure Cosmos DB can be used to meet both the data ingest and delivery needs with no additional services, like Event Hubs, required.
 
 
 ## After the hands-on lab
