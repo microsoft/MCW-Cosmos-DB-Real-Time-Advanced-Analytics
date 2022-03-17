@@ -9,7 +9,7 @@ Hands-on lab step-by-step
 </div>
 
 <div class="MCWHeader3">
-September 2021
+March 2022
 </div>
 
 Information in this document, including URL and other Internet Web site references, is subject to change without notice. Unless otherwise noted, the example companies, organizations, products, domain names, e-mail addresses, logos, people, places, and events depicted herein are fictitious, and no association with any real company, organization, product, domain name, e-mail address, logo, person, place or event is intended or should be inferred. Complying with all applicable copyright laws is the responsibility of the user. Without limiting the rights under copyright, no part of this document may be reproduced, stored in or introduced into a retrieval system, or transmitted in any form or by any means (electronic, mechanical, photocopying, recording, or otherwise), or for any purpose, without the express written permission of Microsoft Corporation.
@@ -18,7 +18,7 @@ Microsoft may have patents, patent applications, trademarks, copyrights, or othe
 
 The names of manufacturers, products, or URLs are provided for informational purposes only and Microsoft makes no representations and warranties, either expressed, implied, or statutory, regarding these manufacturers or the use of the products with any Microsoft technologies. The inclusion of a manufacturer or product does not imply endorsement of Microsoft of the manufacturer or product. Links may be provided to third party sites. Such sites are not under the control of Microsoft and Microsoft is not responsible for the contents of any linked site or any link contained in a linked site, or any changes or updates to such sites. Microsoft is not responsible for webcasting or any other form of transmission received from any linked site. Microsoft is providing these links to you only as a convenience, and the inclusion of any link does not imply endorsement of Microsoft of the site or the products contained therein.
 
-© 2021 Microsoft Corporation. All rights reserved.
+© 2022 Microsoft Corporation. All rights reserved.
 
 Microsoft and the trademarks listed at <https://www.microsoft.com/en-us/legal/intellectualproperty/Trademarks/Usage/General.aspx> are trademarks of the Microsoft group of companies. All other trademarks are property of their respective owners.
 
@@ -202,7 +202,9 @@ Next, you will configure the payment transaction data generator project by compl
 
     ![Screenshot of the solution folder with the TransactionGenerator.sln file selected.](media/solution-folder.png 'File Explorer')
 
-    > **Note**: If you are asked to upgrade the solution, which may occur if you are using Visual Studio 2019, select **OK**.
+    <!-- > **Note**: If you are asked to upgrade the solution, which may occur if you are using Visual Studio 2019, select **OK**. -->
+
+    > **Note**: If you are prompted to sign in to Visual Studio, sign in with the Microsoft account you used to sign in to Azure for this lab. The VM uses the Community addition of Visual Studio which does not require a paid license.
 
 10. Double-click `appsettings.json` in the Solution Explorer to open it. This file contains the settings used by the console app to connect to your Azure services and to configure application behavior settings. The console app is programmed to either use values stored in this file, or within the machine's environment variables. This makes you capable of distributing the executable or containerizing it and passing in environment variables via the command line.
 
@@ -320,9 +322,13 @@ We will be exploring files in the Synapse Analytics workspace's primary ADLS Gen
 
     ![The add button is highlighted.](media/role-assignments-add-button.png "Add")
 
-5. In the add role assignment form, select the **Storage Blob Data Contributor** role, search for and select your Azure user account, then select **Save**.
+5. In the add role assignment form, select the **Storage Blob Data Contributor** role, then select **Next**.
 
-    ![The form is displayed as described.](media/add-role-assignment-form.png "Add role assignment")
+    ![The Storage Blob Data Contributor role is selected.](media/add-role-assignment-form1.png "Add role assignment")
+
+6. Select **+ Select members**, then search for and select your Azure user account, then select **Review + assign**.
+
+    ![The form is displayed as described.](media/add-role-assignment-form2.png "Add role assignment")
 
 ### Task 2: Open Synapse Studio
 
@@ -814,11 +820,13 @@ Now that we have added an Azure Cosmos DB Linked Service in Synapse Analytics, w
 
     ![The linked data blade is displayed.](media/data-load-streaming-dataframe.png "Load streaming DataFrame from container")
 
-3. Set the name of your notebook to `Stream processing` **(1)**, then select **Run all (2)** to run the notebook.
+3. Set the name of your notebook to `Stream processing` **(1)**, select the **Spark pool (2)**, then select **Run all (3)** to run the notebook.
 
     ![The Run all button is selected.](media/notebook-stream-processing.png "Stream processing notebook")
 
-    The first cell contains auto-generated code **(3)** that populates a new DataFrame from the Azure Cosmos DB change feed stream from the `transactions` container. Notice that the `format` value is set to `cosmos.oltp`. This specifies that we are connecting to the transactional store instead of the analytical store. The `spark.cosmos.changeFeed.startFromTheBeginning` option ensures we process all the data streamed into the container.
+    > **Note**: We are currently using Spark 2.4. In this case, use the default generated code.
+
+    The first cell contains auto-generated code **(4)** that populates a new DataFrame from the Azure Cosmos DB change feed stream from the `transactions` container. Notice that the `format` value is set to `cosmos.oltp`. This specifies that we are connecting to the transactional store instead of the analytical store. The `spark.cosmos.changeFeed.startFromTheBeginning` option ensures we process all the data streamed into the container.
 
     > The initial run of this notebook will take time while the Spark pool starts.
 
@@ -937,15 +945,17 @@ In this task, you will execute Synapse Notebooks to perform both near real-time 
 
 6. Execute all the cells in the **Real-time-scoring** notebook.
 
-7. Select the **Batch-scoring-analytical-store** notebook.
+7. After running all of the cells, **stop the session**.
+
+8. Select the **Batch-scoring-analytical-store** notebook.
 
     ![The notebook is selected.](media/notebook-batch-scoring.png "Batch-scoring-analytical-store")
 
-8. In the **Batch-scoring-analytical-store** notebook, follow the instructions to complete the remaining steps of this task. Execute all the cells in the **Batch-scoring-analytical-store** notebook.
+9. In the **Batch-scoring-analytical-store** notebook, follow the instructions to complete the remaining steps of this task. Execute all the cells in the **Batch-scoring-analytical-store** notebook.
 
     > In the cell that requires the Azure Machine Learning connection information, enter the same values you copied from the **Prepare batch scoring model** Azure ML notebook.
 
-9. If you receive an error stating "Session job is rejected because the session of the size specified cannot be allocated, due to core capacity being exceeded", then you need to stop the Spark session of the previous notebook.
+10. If you receive an error stating "Session job is rejected because the session of the size specified cannot be allocated, due to core capacity being exceeded", then you need to stop the Spark session of the previous notebook.
 
     ![The error is displayed.](media/session-job-rejected.png "Session job rejected")
 
